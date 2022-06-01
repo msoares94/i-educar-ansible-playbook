@@ -1,0 +1,81 @@
+---
+
+- name: Ensure sudo group is present
+  group:
+    name: sudo
+    state: present
+
+- name: Allow 'sudo' group to have passwordless sudo
+  lineinfile:
+    dest: /etc/sudoers
+    state: present
+    regexp: '^%sudo'
+    line: '%sudo ALL=(ALL) NOPASSWD: ALL'
+    validate: 'visudo -cf %s'
+
+- name: Add service user and add it to sudo
+  user:
+    name: "{{ ieducar__run_user }}"
+    groups: sudo
+    comment: ""
+    append: yes
+    state: present
+    shell: /bin/bash
+    createhome: yes
+    #generate_ssh_key: yes
+    #ssh_key_bits: 2048
+    #ssh_key_file: .ssh/id_rsa
+  when: ansible_user == "root"
+
+- name: Update the operating system
+  apt:
+    update_cache: yes
+    force_apt_get: yes
+    cache_valid_time: 3600
+
+- name: Upgrade all apt packages the operational system
+  apt:
+    upgrade: dist
+    force_apt_get: yes
+
+- name: Check if a reboot is needed for server
+  stat:
+    path: /var/run/reboot-required
+    get_checksum: no
+  register: reboot__required_file
+
+- name: Reboot the server
+  reboot:
+    msg: "Reboot initiated by Ansible due to kernel updates"
+    connect_timeout: 30
+    reboot_timeout: 600
+    pre_reboot_delay: 0
+    post_reboot_delay: 30
+    test_command: uptime
+  when: reboot__required_file.stat.exists
+
+- name: Install required packages
+  apt:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - jq
+    - git
+    - npm
+    - zip
+    - wget
+    - curl
+    - s3cmd
+    - unzip
+    - nodejs
+    - cmdtest
+    - openssl
+    - net-tools
+    - libpq-dev
+    - redis-server
+    - openjdk-8-jre
+    - bash-completion
+    - build-essential
+    - software-properties-common
+
+- include_tasks: locale.yml

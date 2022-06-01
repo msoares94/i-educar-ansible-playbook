@@ -1,0 +1,65 @@
+---
+
+- name: Configure ondrej/php apt repository
+  apt_repository:
+    repo: "{{ php__apt_repo }}"
+    state: present
+    update_cache: yes
+
+- name: Install php-fpm {{ php__version }} and dependencies
+  apt:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - php{{ php__version }}
+    - php{{ php__version }}-fpm
+    - php{{ php__version }}-common
+    - php{{ php__version }}-zip
+    - php{{ php__version }}-pgsql
+    - php{{ php__version }}-curl
+    - php{{ php__version }}-xml
+    - php{{ php__version }}-xmlrpc
+    - php{{ php__version }}-pdo
+    - php{{ php__version }}-gd
+    - php{{ php__version }}-imagick
+    - php{{ php__version }}-ldap
+    - php{{ php__version }}-imap
+    - php{{ php__version }}-mbstring
+    - php{{ php__version }}-intl
+    - php{{ php__version }}-cli
+    - php{{ php__version }}-tidy
+    - php{{ php__version }}-bcmath
+    - php{{ php__version }}-opcache
+    - php{{ php__version }}-ctype
+    - php{{ php__version }}-dom
+    - php{{ php__version }}-fileinfo
+    - php{{ php__version }}-iconv
+    - php{{ php__version }}-phar
+    - php{{ php__version }}-simplexml
+    - php{{ php__version }}-tokenizer
+    - php{{ php__version }}-xmlreader
+    - php{{ php__version }}-xmlwriter
+  register: php_setup
+  notify: restart php-fpm
+
+- name: Configure global settings php-fpm in php.ini
+  lineinfile:
+    dest: "{{ php__config_path }}/php.ini"
+    backrefs: yes
+    regexp: "^;?{{ item.option }}.+$"
+    line: "{{ item.option }} = '{{ item.value }}'"
+    state: "{{ item.state | default('present') }}"
+    backup: yes
+  with_items: "{{ php__config_fpm_php_ini }}"
+  notify: restart php-fpm
+
+- name: Configure global settings php-fpm in pool www.conf
+  lineinfile:
+    dest: "{{ php__config_path }}/pool.d/www.conf"
+    backrefs: yes
+    regexp: "^;?{{ item.option }}.+$"
+    line: "{{ item.option }} = '{{ item.value }}'"
+    state: "{{ item.state | default('present') }}"
+    backup: yes
+  with_items: "{{ php__config_fpm_pool_www_conf }}"
+  notify: restart php-fpm

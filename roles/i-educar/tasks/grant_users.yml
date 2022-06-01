@@ -1,0 +1,15 @@
+---
+
+- name: Ensure users GRANT are present
+  postgresql_user:
+    name: "{{ item.name }}"
+    conn_limit: "{{ item.conn_limit | default(omit) }}"
+    priv: "{{ item.priv | default(omit) }}"
+    role_attr_flags: "{{ item.role_attr_flags | default(omit) }}"
+    db: "{{ item.db | default(omit) }}"
+  with_items: "{{ ieducar__postgresql_users }}"
+  become: yes
+  become_user: "{{ postgresql__user }}"
+  # See: https://github.com/ansible/ansible/issues/16048#issuecomment-229012509
+  vars:
+    ansible_ssh_pipelining: true

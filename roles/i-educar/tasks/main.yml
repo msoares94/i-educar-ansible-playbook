@@ -1,0 +1,128 @@
+---
+
+- include_tasks: create_users.yml
+- include_tasks: databases.yml
+- include_tasks: grant_users.yml
+
+# TODO: Tentar remover passo e reiniciar o serviço via handler 
+- name: Setup cluster to default to UTF-8 | Restart PostgreSQL Cluster
+  become: yes
+  become_user: root
+  service:
+    name: postgresql
+    state: restarted
+
+- name: Download i-Educar {{ ieducar__version }}
+  get_url:
+    url: https://github.com/portabilis/i-educar/releases/download/{{ ieducar__version }}/ieducar-{{ ieducar__version }}.tar.gz
+    dest: /home/{{ ieducar__run_user }}/ieducar-{{ ieducar__version }}.tar.gz
+
+- name: "Extract package i-Educar {{ ieducar__version }}"
+  #become: yes
+  #become_user: "{{ ieducar__run_user }}"
+  #become_method: sudo
+  shell: |
+    sudo rm -rf {{ ieducar__base_path }} || true
+    [ -d /var/www ] || sudo mkdir -p /var/www
+    sudo tar -zxf /home/{{ ieducar__run_user }}/ieducar-{{ ieducar__version }}.tar.gz -C /var/www/
+    sudo mv {{ ieducar__base_path }}-{{ ieducar__version }} {{ ieducar__base_path }}
+
+# - name: "Extract package i-Educar {{ ieducar__version }}"
+#   become: yes
+#    become_user: "{{ ieducar__run_user }}"
+#    become_method: sudo
+#   unarchive:
+#     remote_src: yes
+#     src: /home/{{ ieducar__run_user }}/ieducar-{{ ieducar__version }}.tar.gz
+#     dest: /var/www/
+
+- name: "Install package composer {{ composer__version }}"
+  #become: yes
+  #become_user: "{{ ieducar__run_user }}"
+  #become_method: sudo
+  shell: |
+    sudo curl -sS https://getcomposer.org/installer -o composer-setup.php
+    HASH=`curl -sS https://composer.github.io/installer.sig`
+    sudo php -r "if (hash_file('SHA384', 'composer-setup.php') === '$HASH') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
+    sudo php composer-setup.php --install-dir=/usr/local/bin --filename=composer --version={{ composer__version }}
+
+- name: "Fix permission i-Educar"
+  #become: yes
+  #become_user: "{{ ieducar__run_user }}"
+  #become_method: sudo
+  shell: |
+    sudo chown -R {{ ieducar__run_user }}:www-data {{ ieducar__base_path }}
+
+- name: Read values from environment
+  shell: "source {{ env_path }}; echo ${{ item|upper }}"
+  register: output
+  with_items: "{{ values }}"
+  args:
+    executable: /bin/bash
+  changed_when: false
+
+- name: Store read value
+  set_fact:
+    "{{ item.0 }}": "{{ item.1.stdout }}"
+  when: '{{ item.0 }} is undefined'
+  with_together:
+    - "{{ values }}"
+    - "{{ output.results }}"
+  changed_when: false
+
+#- name: Teste
+#  debug:
+    #- { option: 'DB_DATABASE', value: "{{ ieducar_db_database | lookup('env', 'DB_DATABASE') }}" }
+    #msg: "{{ lookup('env', 'DB_DATABASE file={{ ieducar__base_path }}/.env') }}"
+    #msg: "{{ lookup('env', 'DB_DATABASE') | default('nobody', true) }} is the user."
+#    msg: "{{ lookup('ini', 'DB_PASSWORD file={{ ieducar__base_path }}/.env') | default('nobody', true) }}"
+
+- name: Configure global settings i-Educar
+  #become: yes
+  #become_user: "{{ ieducar__run_user }}"
+  #become_method: sudo
+  lineinfile:
+    dest: "{{ ieducar__base_path }}/.env"
+    backrefs: yes
+    regexp: "^{{ item.option }}.+$"
+    line: "{{ item.option }}={{ item.value }}"
+    state: "{{ item.state | default('present') }}"
+    backup: yes
+  loop:
+    - { option: 'DB_HOST', value: "{{ ieducar_db_host if ieducar_db_host is defined else DB_HOST }}" }
+    - { option: 'DB_PORT', value: "{{ ieducar_db_port if ieducar_db_port is defined else DB_PORT }}" }
+    - { option: 'DB_DATABASE', value: "{{ ieducar_db_database if ieducar_db_database is defined else DB_DATABASE }}" }
+    - { option: 'DB_USERNAME', value: "{{ ieducar_db_username if ieducar_db_username is defined else DB_USERNAME }}" }
+    - { option: 'DB_PASSWORD', value: "{{ ieducar_db_password if ieducar_db_password is defined else DB_PASSWORD }}" }
+
+- name: Copy site-available i-Educar to Nginx
+  become: yes
+  become_user: root
+  #become_method: sudo
+  template:
+    src: "{{ ieducar__conf_nginx }}"
+    dest: "{{ nginx__config_path }}/sites-available/ieducar.conf"
+
+- name: "Remove site-enabled default of Nginx"
+  #become: yes
+  #become_user: "{{ ieducar__run_user }}"
+  #become_method: sudo
+  shell: |
+    sudo rm -rf /etc/nginx/sites-enabled/*
+
+- name: "Enable site-enabled i-Educar of Nginx"
+  #become: yes
+  #become_user: "{{ ieducar__run_user }}"
+  #become_method: sudo
+  shell: |
+    sudo ln -sf {{ nginx__config_path }}/sites-available/ieducar.conf {{ nginx__config_path }}/sites-enabled/ieducar.conf
+
+- name: "Install i-Educar {{ ieducar__version }}"
+  #become: yes
+  #become_user: "{{ ieducar__run_user }}"
+  #become_method: sudo
+  shell: |
+    cd {{ ieducar__base_path }}
+    sudo yes | composer new-install
+    sudo php artisan storage:link
+  notify: restart ieducar

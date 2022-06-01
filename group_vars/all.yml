@@ -1,0 +1,264 @@
+---
+
+###########################################################################
+### System Vars
+###########################################################################
+
+system__check_memory_min_required: "{{ system_check_memory_min_required | default('true') }}"
+system__memory_min_required: 2
+
+system__locales:
+  - 'en_US.UTF-8'
+  - 'pt_BR.UTF-8'
+
+system__locale: "{{ system_locale | default('pt_BR.UTF-8') }}"
+system__language: "{{ system_language | default('pt_BR.UTF-8') }}"
+system__time_zone: "{{ system_time_zone | default('America/Sao_Paulo') }}"
+
+###########################################################################
+### PHP-FPM Vars
+###########################################################################
+
+php__apt_repo: ppa:ondrej/php
+php__version: "{{ php_version | default('7.4') }}"
+
+php__config_fpm_php_ini:
+  - option: memory_limit
+    value: '1024M'
+  - option: upload_max_filesize
+    value: '2048M'
+  - option: post_max_size
+    value: '2048M'
+  - option: max_execution_time
+    value: '300'
+
+php__config_fpm_pool_www_conf:
+  - option: request_terminate_timeout
+    value: '300'
+
+php__config_path: "/etc/php/{{ php__version }}/fpm"
+
+###########################################################################
+### Composer Vars
+###########################################################################
+
+# 2.1.5
+# 2.2.11
+composer__version: "{{ composer_version | default('2.3.5') }}"
+
+###########################################################################
+### i-Educar Vars
+###########################################################################
+
+ieducar__version: "{{ ieducar_version | default('2.6.9') }}"
+ieducar__run_user: "{{ ansible_user|lower if ansible_user != 'root' else 'deployer' }}"
+ieducar__deployment_type: "{{ ieducar_deployment_type | default('ieducar-ce') }}"
+ieducar__install_reports_package_community_edition: "{{ ieducar_install_reports_package_community_edition | default('true') }}"
+ieducar__base_path: "{{ ieducar_base_path | default('/var/www/ieducar') }}"
+
+ieducar__postgresql_users:
+  - {
+    name: "{{ ieducar_db_username | default('ieducar') }}",
+    password: "{{ ieducar_db_password | default('ieducar') }}",
+    encrypted: yes,
+    expires: 'infinity',
+    state: 'present',
+    role_attr_flags: Superuser,
+    db: "{{ ieducar_db_database | default('ieducar') }}"
+  }
+
+ieducar__postgresql_databases:
+  - {
+    name: "{{ ieducar_db_databasename | default('ieducar') }}",
+    lc_collate: 'pt_BR.UTF-8',
+    lc_ctype: 'pt_BR.UTF-8',
+    encoding: 'UTF-8',
+    template: 'template0',
+    owner: "{{ ieducar_db_username | default('ieducar') }}",
+    extension: [], # check that you have installed then needed extension module before
+    state: 'present'
+   }
+
+#
+# Accepted values in ieducar__conf_nginx
+#
+# ieducar-with-domain-and-ssl.conf
+# ieducar-with-domain-without-ssl.conf
+# ieducar-without-domain-and-without-ssl.conf
+ieducar__conf_nginx: "{{ ieducar_conf_nginx | default('ieducar-without-domain-and-without-ssl.conf') }}"
+
+ieducar__with_domain: "{{ ieducar_with_domain | default('false') }}"
+ieducar__name_domain: "{{ ieducar_name_domain | default('_') }}"
+
+###########################################################################
+### PostgreSQL Vars
+###########################################################################
+
+postgresql__version: "{{ postgresql_version | default(14) }}"
+
+postgresql__gpg_url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
+postgresql__apt_repo: "deb http://apt.postgresql.org/pub/repos/apt/ {{ ansible_distribution_release }}-pgdg main"
+
+postgresql__extensions: []
+postgresql__psycopg2: python3-psycopg2
+postgresql__recreate_cluster: "{{ postgresql_recreate_cluster | default('true') }}"
+
+postgresql__encoding: "{{ postgresql_encoding | default('UTF-8') }}"
+postgresql__locale: "{{ postgresql_locale | default('pt_BR.UTF-8') }}"
+
+postgresql__user: "postgres"
+postgresql__group: "postgres"
+
+postgresql__global_conf_options:
+  - option: listen_addresses
+    value: '*'
+  - option: log_min_duration_statement
+    value: 1000
+  # Check doc: https://www.pgbouncer.org/config.html
+  # Check: https://pgtune.leopard.in.ua/#/
+  - option: max_connections
+    value: 250
+  - option: shared_buffers
+    value: 256MB
+  - option: effective_cache_size
+    value: 768MB
+  - option: maintenance_work_mem
+    value: 64MB
+  - option: checkpoint_completion_target
+    value: 0.9
+  - option: wal_buffers
+    value: 7864kB
+  - option: default_statistics_target
+    value: 100
+  - option: random_page_cost
+    value: 1.1
+  - option: effective_io_concurrency
+    value: 200
+  - option: work_mem
+    value: 524kB
+  - option: min_wal_size
+    value: 1GB
+  - option: max_wal_size
+    value: 4GB
+
+postgresql__global_conf_options_2gram_2cpv:
+  - option: listen_addresses
+    value: '*'
+  - option: log_min_duration_statement
+    value: 1000
+  # Check doc: https://www.pgbouncer.org/config.html
+  # Check: https://pgtune.leopard.in.ua/#/
+  - option: max_connections
+    value: 250
+  - option: shared_buffers
+    value: 512MB
+  - option: effective_cache_size
+    value: 1536MB
+  - option: maintenance_work_mem
+    value: 128MB
+  - option: checkpoint_completion_target
+    value: 0.9
+  - option: wal_buffers
+    value: 16MB
+  - option: default_statistics_target
+    value: 100
+  - option: random_page_cost
+    value: 1.1
+  - option: effective_io_concurrency
+    value: 200
+  - option: work_mem
+    value: 2097kB
+  - option: min_wal_size
+    value: 1GB
+  - option: max_wal_size
+    value: 4GB
+  - option: max_worker_processes
+    value: 2
+  - option: max_parallel_workers_per_gather
+    value: 1
+  - option: max_parallel_workers
+    value: 2
+  - option: max_parallel_maintenance_workers
+    value: 1
+
+postgresql__pg_hba_entries:
+  - { type: local, database: all, user: postgres, address: '', auth_method: peer }
+  - { type: local, database: all, user: all, address: '', auth_method: peer }
+  - { type: host, database: all, user: all, address: '127.0.0.1/32', auth_method: md5 }
+  - { type: host, database: all, user: all, address: all, auth_method: md5 }
+  - { type: host, database: all, user: all, address: '::1/128', auth_method: md5 }
+  # starting version 10 there is replication role
+  - { type: local, database: replication, user: all, address: '', auth_method: peer }
+  - { type: host, database: replication, user: all, address: '127.0.0.1/32', auth_method: md5 }
+  - { type: host, database: replication, user: all, address: '::1/128', auth_method: md5 }
+
+postgresql__users:
+  - {
+    name: "postgres",
+    password: "postgres",
+    encrypted: yes,
+    expires: 'infinity',
+    state: 'present',
+    role_attr_flags: Superuser, Create role, Create DB, Replication, Bypass RLS,
+    db: postgres
+  }
+  - {
+    name: "test",
+    password: "supersecure",
+    encrypted: yes,
+    expires: 'infinity',
+    state: 'present',
+    db: test
+  }
+
+postgresql__databases:
+  - {
+    name: test,
+    lc_collate: 'pt_BR.UTF-8',
+    lc_ctype: 'pt_BR.UTF-8',
+    encoding: 'UTF-8',
+    template: 'template0',
+    owner: test,
+    extension: [], # check that you have installed then needed extension module before
+    state: 'present'
+   }
+
+postgresql__bin_path: "/usr/lib/postgresql/{{ postgresql_version }}/bin"
+postgresql__data_work_dir: "/var/lib/postgresql/{{ postgresql_version }}/main"
+postgresql__install_base_path: "/etc/postgresql/{{ postgresql_version }}/main"
+
+###########################################################################
+### NGINX Vars
+###########################################################################
+
+nginx__config_path: "{{ nginx_config_path | default('/etc/nginx') }}"
+nginx__deploy_path: "{{ nginx_deploy_path | default('/var/www/html') }}"
+
+nginx__configs:
+  - option: worker_connections
+    value: 1024
+  - option: client_body_buffer_size
+    value: 64k
+  - option: client_max_body_size
+    value: 100m
+  - option: client_body_in_single_buffer
+    value: on
+  - option: client_header_buffer_size
+    value: 1m
+  - option: large_client_header_buffers
+    value: 4 8k
+
+###########################################################################
+### LetsEncrypt Vars
+###########################################################################
+#
+# See for evolution: https://graspingtech.com/ansible-lets-encrypt
+#
+letsencrypt__ssl: "{{ letsencrypt_ssl | default('false') }}"
+letsencrypt__base_path: /etc/letsencrypt
+letsencrypt__webroot_path: "/var/www/html | default('/usr/share/nginx/html')"
+letsencrypt__cert_name: /etc/ssl
+letsencrypt__email: "{{ letsencrypt__email | default('ieducar@ieducar.example.com') }}"
+# sudo certbot certonly --webroot -w /var/www/html
+# --non-interactive --agree-tos --cert-name "$DIRETORIO_CERTIFICADO"
+# -d "$DOMINIO" -m "$EMAIL_LETSENCRYPT" --redirect

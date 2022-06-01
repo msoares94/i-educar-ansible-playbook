@@ -1,0 +1,79 @@
+---
+
+- name: Setup cluster to default to UTF-8 | Drop PostgreSQL Cluster
+  # if the dbs haven't been created yet, we want to destroy the whole db
+  # cluster and recreate it with proper utf8 support.
+  shell: pg_dropcluster --stop {{ postgresql__version }} main
+  when: postgresql__setup.changed and postgresql__recreate_cluster # only do this if the dbs haven't been created yet
+  #ignore_errors: yes
+
+- name: Setup cluster to default to UTF-8 | Create PostgreSQL Cluster
+  # if the dbs haven't been created yet, we want to destroy the whole db
+  # cluster and recreate it with proper utf8 support. From http://ph.ly/pg
+  shell: pg_createcluster -u "{{ postgresql__user }}" -g "{{ postgresql__group }}" --encoding "{{ postgresql__encoding }}" --locale="{{ postgresql__locale }}" --lc-collate="{{ postgresql__locale }}" {{ postgresql__version }} main
+  when: postgresql__setup.changed and postgresql__recreate_cluster # only do this if the dbs haven't been created yet
+
+# TODO: Tentar remover passo e reiniciar o serviço via handler 
+- name: Setup cluster to default to UTF-8 | Restart PostgreSQL Cluster
+  #shell: service postgresql restart
+  service:
+    name: postgresql
+    state: restarted
+
+- name: Check include configuration
+  lineinfile:
+    dest: "{{ postgresql__install_base_path }}/postgresql.conf"
+    regexp: "^#?include_dir.+$"
+    line: "include_dir = 'conf.d'"
+    state: present
+    backup: no
+  notify: restart postgresql
+
+- name: Configure global settings
+  lineinfile:
+    dest: "{{ postgresql__install_base_path }}/postgresql.conf"
+    backrefs: yes
+    regexp: "^#?{{ item.option }}.+$"
+    line: "{{ item.option }} = '{{ item.value }}'"
+    state: "{{ item.state | default('present') }}"
+    backup: yes
+  with_items: "{{ postgresql__global_conf_options }}"
+  notify: restart postgresql
+
+- name: Configure host based authentication
+  template:
+    src: "pg_hba.conf.j2"
+    dest: "{{ postgresql__install_base_path }}/pg_hba.conf"
+    backup: yes
+    owner: "{{ postgresql__user }}"
+    group: "{{ postgresql__group }}"
+    mode: 0644
+  notify: restart postgresql
+  when: postgresql__pg_hba_entries is defined
+
+# - name: Configure host based authentication
+#   template:
+#     src: " {{ item}} "
+#     dest: "{{ postgresql__install_base_path }}/{{ item | basename | regex_replace('.j2','') }}"
+#     backup: yes
+#     owner: "{{ postgresql__user }}"
+#     group: "{{ postgresql__group }}"
+#     mode: 0644
+#   with_items: "{{ pg_hba.conf.j2 }}"
+#   notify: restart postgresql
+
+# - name: Schedule backups
+#   cron:
+#     name: "PostgreSQL Backup"
+#     cron_file: ansible_postgresql__backup
+#     user: postgres
+#     hour: "{{ postgresql__backup_hour | default(1) }}"
+#     minute: "{{ postgresql__backup_minute | default(0) }}"
+#     day: "{{ postgresql__backup_day | default(omit) }}"
+#     month: "{{ postgresql__backup_month | default(omit) }}"
+#     weekday: "{{ postgresql__backup_weekday | default(omit) }}"
+#     job: >-
+#       {{ postgresql__backup_command }}
+#       {{
+#         ' && ' ~ postgresql__backup_post_command if postgresql__backup_post_command is defined else ''
+#       }}

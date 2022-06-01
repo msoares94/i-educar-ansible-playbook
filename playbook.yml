@@ -1,0 +1,25 @@
+---
+
+- name: Install Common, PostgreSQL, Redis Server, PHP-FPM, NGINX
+  hosts: appservers
+  roles:
+    - common
+    - postgresql
+    - php-fpm
+    - nginx
+
+- name: Install i-Educar
+  hosts: appservers
+  become: yes
+  become_user: "{{ ieducar__run_user }}"
+  become_method: sudo
+  vars:
+    env_path: "{{ ieducar__base_path }}/.env"
+    values:
+      - DB_HOST
+      - DB_PORT
+      - DB_DATABASE
+      - DB_USERNAME
+      - DB_PASSWORD
+  roles:
+    - i-educar

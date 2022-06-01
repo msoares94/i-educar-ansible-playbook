@@ -1,0 +1,69 @@
+###########################################################################
+### Server i-Educar
+###########################################################################
+[appservers]
+#ansible_user -> SSH user, this user should allow ssh based auth without requiring a password
+#ansible_become -> If ansible_user is not root, ansible_become must be set to true and defined ansible_become_method with sudo
+
+#127.0.0.1 ansible_user=root
+#127.0.0.1 ansible_user=ubuntu ansible_become=true ansible_become_method=sudo
+
+###########################################################################
+### Set common variables for all hosts
+###########################################################################
+[all:vars]
+
+ansible_ssh_common_args="-o StrictHostKeyChecking=no"
+
+system_check_memory_min_required=false
+
+###########################################################################
+### PostgreSQL Vars
+###########################################################################
+postgresql_version=13
+
+###########################################################################
+### PHP Vars
+###########################################################################
+php_version=7.4
+
+###########################################################################
+### Composer Vars
+###########################################################################
+composer_version=2.3.5
+
+###########################################################################
+### i-Educar Vars
+###########################################################################
+ieducar_version=2.6.9
+
+#ieducar_base_path=/var/www/ieducar
+
+#ieducar_db_host=
+#ieducar_db_port=
+#ieducar_db_database=
+#ieducar_db_username=
+#ieducar_db_password=
+
+ieducar_deployment_type=ieducar-ce
+ieducar_install_reports_package_community_edition=true
+
+#
+# Accepted values in ieducar__conf_nginx
+#
+# ieducar-with-domain-and-ssl.conf
+# ieducar-with-domain-without-ssl.conf
+# ieducar-without-domain-and-without-ssl.conf
+ieducar_conf_nginx=ieducar-without-domain-and-without-ssl.conf
+
+# This variable defines if the application will be accessed via domain
+ieducar_with_domain=false
+
+# If ieducar_with_domain is not false, ieducar_name_domain must be set with the domain value and uncomment
+#ieducar_name_domain=ieducar.example.com.br
+
+# This variable defines whether to get ssl certificate from letsencrypt if not false, ieducar_with_domain must be set to true and uncomment ieducar_name_domain
+letsencrypt_ssl=false
+
+# If letsencrypt_ssl is not false, letsencrypt_email must be set with the email value and uncomment
+#letsencrypt_email='ieducar@ieducar.example.com'

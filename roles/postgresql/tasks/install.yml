@@ -1,0 +1,34 @@
+---
+
+- name: Add postgresql.org repository GPG key
+  apt_key:
+    url: "{{ postgresql__gpg_url }}"
+
+- name: Configure postgresql.org apt repository
+  apt_repository:
+    repo: "{{ postgresql__apt_repo }}"
+    state: present
+    update_cache: yes
+
+- name: Install package
+  apt:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - "postgresql-{{ postgresql__version }}"
+    - "postgresql-client-{{ postgresql__version }}"
+  register: postgresql__setup
+  notify: start postgresql
+
+- name: Install python psycopg2
+  apt:
+    name: "{{ postgresql__psycopg2 }}"
+    state: present
+
+- name: Install extensions
+  apt:
+    name: "postgresql-{{ postgresql__version }}-{{ item }}"
+    state: present
+  notify: restart postgresql
+  with_items:
+    - "{{ postgresql__extensions }}"

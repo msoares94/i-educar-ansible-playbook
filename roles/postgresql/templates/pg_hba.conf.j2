@@ -1,0 +1,10 @@
+{{ ansible_managed | comment }}
+
+# PostgreSQL pg_hba Authentication Configuration File
+# ===================================================
+
+# TYPE  DATABASE        USER            ADDRESS                 METHOD
+
+{% for entry_pg_hba in postgresql__pg_hba_entries %}
+{{ entry_pg_hba.type }} {{ entry_pg_hba.database }} {{ entry_pg_hba.user }} {{ entry_pg_hba.address|default('') }} {{ entry_pg_hba.ip_address|default('') }} {{ entry_pg_hba.ip_mask|default('') }} {{ entry_pg_hba.auth_method }} {{ entry_pg_hba.auth_options|default("") }}
+{% endfor %}

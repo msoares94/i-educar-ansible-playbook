@@ -1,0 +1,14 @@
+---
+
+- name: Checking supported version
+  assert:
+    that:
+      -  "{{ postgresql__version }} >= 13"
+    success_msg: "Supported PostgreSQL {{ postgresql__version }} version"
+    fail_msg: "Not a supported PostgreSQL version {{ postgresql__version }}"
+
+- include_tasks: install.yml
+- include_tasks: configure.yml
+- include_tasks: create_users.yml
+- include_tasks: databases.yml
+- include_tasks: grant_users.yml

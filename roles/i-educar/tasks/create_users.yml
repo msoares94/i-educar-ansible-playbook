@@ -1,0 +1,19 @@
+---
+
+- name: Ensure users are present
+  postgresql_user:
+    name: "{{ item.name }}"
+    password: "{{ item.password | default(omit) }}"
+    encrypted: "{{ item.encrypted | default(true) }}"
+    expires: "{{ item.expires | default('infinity') }}"
+    state: "{{ item.state | default('present') }}"
+  with_items: "{{ ieducar__postgresql_users }}"
+  become: yes
+  become_user: "{{ postgresql__user }}"
+  register: ieducar__postgresql_setup_users
+  # See: https://github.com/ansible/ansible/issues/16048#issuecomment-229012509
+  vars:
+    ansible_ssh_pipelining: true
+
+#- debug:
+#    msg: "{{ ieducar__postgresql_setup_users }}"
