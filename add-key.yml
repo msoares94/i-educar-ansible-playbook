@@ -1,6 +1,6 @@
 ---
 
-- name: "Playbook to Add Key to EC2 Instances"
+- name: "Playbook to Add Key to Instances"
   hosts: appservers
   vars:
     - status : "present"

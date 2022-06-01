@@ -94,7 +94,7 @@ ieducar__name_domain: "{{ ieducar_name_domain | default('_') }}"
 ### PostgreSQL Vars
 ###########################################################################
 
-postgresql__version: "{{ postgresql_version | default(14) }}"
+postgresql__version: "{{ postgresql_version | default(13) }}"
 
 postgresql__gpg_url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
 postgresql__apt_repo: "deb http://apt.postgresql.org/pub/repos/apt/ {{ ansible_distribution_release }}-pgdg main"
