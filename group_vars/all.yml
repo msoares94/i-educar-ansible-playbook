@@ -44,7 +44,8 @@ php__config_path: "/etc/php/{{ php__version }}/fpm"
 
 # 2.1.5
 # 2.2.11
-composer__version: "{{ composer_version | default('2.3.5') }}"
+# 2.3.5
+composer__version: "{{ composer_version | default('2.2.11') }}"
 
 ###########################################################################
 ### i-Educar Vars
@@ -53,6 +54,7 @@ composer__version: "{{ composer_version | default('2.3.5') }}"
 ieducar__version: "{{ ieducar_version | default('2.6.9') }}"
 ieducar__run_user: "{{ ansible_user|lower if ansible_user != 'root' else 'deployer' }}"
 ieducar__deployment_type: "{{ ieducar_deployment_type | default('ieducar-ce') }}"
+ieducar__version_reports_package_community_edition: "{{ ieducar_version_reports_package_community_edition | default('2.6') }}"
 ieducar__install_reports_package_community_edition: "{{ ieducar_install_reports_package_community_edition | default('true') }}"
 ieducar__base_path: "{{ ieducar_base_path | default('/var/www/ieducar') }}"
 

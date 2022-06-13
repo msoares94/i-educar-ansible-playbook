@@ -66,7 +66,7 @@ Projeto para automatizar a instalação de Software Público [i-Educar](https://
     system_time_zone: America/Sao_Paulo
 
     # Composer
-    composer_version: 2.3.5
+    composer_version: 2.2.11
 
     # PHP
     php_version: 7.4

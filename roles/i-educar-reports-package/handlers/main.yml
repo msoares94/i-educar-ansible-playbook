@@ -1,0 +1,26 @@
+---
+
+- name: restart nginx
+  become: yes
+  become_user: root
+  service:
+    name: nginx
+    state: restarted
+    enabled: yes
+  listen: restart ieducar
+
+- name: restart php-fpm
+  become: yes
+  become_user: root
+  service:
+    name: php{{ php__version }}-fpm
+    state: restarted
+    enabled: yes
+  listen: restart ieducar
+
+- name: restart postgresql
+  become: yes
+  become_user: root
+  service:
+    name: postgresql
+    state: restarted

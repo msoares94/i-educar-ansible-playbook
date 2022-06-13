@@ -30,7 +30,7 @@ php_version=7.4
 ###########################################################################
 ### Composer Vars
 ###########################################################################
-composer_version=2.3.5
+composer_version=2.2.11
 
 ###########################################################################
 ### i-Educar Vars
@@ -44,7 +44,8 @@ ieducar_version=2.6.9
 #ieducar_db_password=
 
 #ieducar_deployment_type=ieducar-ce
-#ieducar_install_reports_package_community_edition=true
+ieducar_version_reports_package_community_edition=2.6
+ieducar_install_reports_package_community_edition=true
 
 #
 # Accepted values in ieducar__conf_nginx

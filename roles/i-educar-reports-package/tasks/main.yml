@@ -1,0 +1,27 @@
+---
+
+- name: "Setup target Report Package"
+  shell: |
+    cd /var/www/ieducar && sudo rm -rf packages/portabilis/i-educar-reports-package
+  when:
+    - ieducar__install_reports_package_community_edition|bool == true
+
+- name: Download the Report Package of i-Educar {{ ieducar__version }}
+  git:
+    repo: https://github.com/portabilis/i-educar-reports-package.git
+    version: "{{ ieducar__version_reports_package_community_edition }}"
+    dest: "{{ ieducar__base_path }}/packages/portabilis/i-educar-reports-package"
+    clone: yes
+    update: yes
+  when:
+    - ieducar__install_reports_package_community_edition|bool == true
+
+- name: "Install the Report Package of i-Educar {{ ieducar__version }}"
+  shell: |
+    cd {{ ieducar__base_path }}
+    sudo yes | composer update-install
+    sudo php artisan community:reports:link
+    sudo php artisan reports:install
+  when:
+    - ieducar__install_reports_package_community_edition|bool == true
+  notify: restart ieducar
