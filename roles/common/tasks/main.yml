@@ -1,9 +1,5 @@
 ---
 
-# - name: Print all available facts
-#   debug:
-#     var: ansible_facts
-
 - name: System information
   debug:
     msg: "{{ item }}"
@@ -13,7 +9,8 @@
 - include_tasks: checking_requirements_software.yml
 - include_tasks: checking_requirements_hardware.yml
 - include_tasks: install.yml
+- include_tasks: locale.yml
 
 - name: Ensure configured time zone is present
-  timezone:
+  community.general.timezone:
     name: "{{ system__time_zone }}"

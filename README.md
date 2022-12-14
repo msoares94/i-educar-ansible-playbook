@@ -1,64 +1,83 @@
->[In Portuguese](README_pt-BR.md)
+# Instale o i-Educar com o Ansible
+Projeto para automatizar a instalação de Software Público [i-Educar](https://ieducar.org).
 
-# Install i-Educar with Ansible
-Project to automate the installation of Public Software [i-Educar](https://ieducar.org).
+> Status do projeto: Em desenvolvimento :warning:
 
-> Project Status: Under development :warning:
-
-### Table of Contents
+### Índice
     
-   * [Project description](#project-description)
-   * [Prerequisites](#prerequisites)
-   * [Authentication mode on the target server](#authentication-mode-on-the-target-server)
-   * [Running the playbook](#running-the-playbook)
-   * [Role variables](#role-variables)
-   * [Dependencies](#dependencies)
-   * [License](#license)
-   * [Author information](#author-information)
-   * [Donate](#donate)
+   * [Descrição do projeto](#descrição-do-projeto)
+   * [Pré-requisitos](#pré-requisitos)
+   * [Dependências](#dependências)
+   * [Modo de autenticação no servidor de destino](#modo-de-autenticação-no-servidor-de-destino)
+   * [Executando o manual](#executando-o-manual)
+   * [Variáveis de função](#variáveis-de-função)
+   * [Licença](#licença)
 
 --------------
 
-### Project description
-Project to automate the installation of Public Software [i-Educar](https://ieducar.org).
+### Descrição do projeto
+Projeto para automatizar a instalação de Software Público [i-Educar](https://ieducar.org).
 
 --------------
 
-### Prerequisites
--  The command cannot be executed on the installation target server as during the installation process the server is restarted.
+### Pré-requisitos
+-  O comando não pode ser executado no servidor de destino da instalação, pois durante o processo de instalação o servidor é reiniciado.
+
+- O arquivo `inventory.example` deve ser renomeado para `inventory`
 
 --------------
 
-### Authentication mode on the target server
+### Dependências
+------------
 
-- #### SSH keys
+   - Ansible ^2.10
+        
+            Alguns módulos fazem parte das coleções:
+                community.general
+                community.postgresql
 
-  SSH Generate Key
+            Talvez você já tenha esta coleção instalada se estiver usando o pacote ansible, não está incluído em ansible-core.
+            
+            Para verificar os módulos instalados, execute ansible-galaxy collection list
+
+            Para instalá-lo, execute:
+                ansible-galaxy collection install community.general
+                ansible-galaxy collection install community.postgresql
+            
+   - Python ^3.8
+
+--------------
+
+### Modo de autenticação no servidor de destino
+
+- #### Chaves SSH
+
+  Gerar chave SSH
     - ```ssh-keygen -t rsa```
 
-  Set key permission
+  Definir permissão de chave
     - ```chmod 400 ~/.ssh/id_rsa```
 
-  Add key in server
+  Adicionar chave no servidor
     - ```ansible-playbook add-key.yml -i inventory --key-file ~/.ssh/id_rsa --extra-vars "key=~/.ssh/id_rsa.pub"```
 
-- #### Password
+- #### Senha
 
-    There are no steps to be performed!
+    Não há etapas a serem executadas!
 
 --------------
 
-### Running the playbook
+### Executando o manual
 
-- #### Server target with ssh keys
+- #### Servidor de destino com chaves ssh
     ```ansible-playbook playbook.yml -i inventory --key-file ~/.ssh/id_rsa```
 
-- #### Server target with password
+- #### Servidor de destino com senha
     ```ansible-playbook playbook.yml -i inventory --ask-pass```
 
 --------------
 
-### Role variables
+### Variáveis de função
 
     # System
     system_locale: pt_BR.UTF-8
@@ -66,16 +85,16 @@ Project to automate the installation of Public Software [i-Educar](https://ieduc
     system_time_zone: America/Sao_Paulo
 
     # Composer
-    composer_version: 2.2.11
+    composer_version: 2.3.5
 
     # PHP
-    php_version: 7.4
+    php_version: 8.0
 
     # i-Educar
-    ieducar_version: 2.6.9
+    ieducar_version: 2.7.2
 
     # Postgresql
-    postgresql_version: 13
+    postgresql_version: 14
     postgresql_encoding: 'UTF-8'
     postgresql_locale: 'pt_BR.UTF-8'
     postgresql_recreate_cluster: true
@@ -123,23 +142,6 @@ Project to automate the installation of Public Software [i-Educar](https://ieduc
         - option: max_wal_size
             value: 4GB
 
-Dependencies
-------------
-
-   - Ansible Core 2.12.4
-   - Python 3.8.10
-
-License
+### Licença
 -------
 [GNU GENERAL PUBLIC LICENSE v3](LICENSE)
-
-Author information
-------------------
-
-[Marcos Oliveira Soares](https://github.com/marcosoliveirasoares94)
-
-Donate
-------------------
-Help keep this project going!
->
-Key PIX: 1d60a324-d92f-400e-b3df-40a427288b4b

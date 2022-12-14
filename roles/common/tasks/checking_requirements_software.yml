@@ -11,6 +11,6 @@
   assert:
     that:
       -  "'{{ ansible_distribution_version }}' >= '18.04'"
-      -  "'{{ ansible_distribution_version }}' <= '20.04'"
+      -  "'{{ ansible_distribution_version }}' <= '22.04'"
     success_msg: "Version supported operational system"
     fail_msg: "{{ ansible_distribution_version }} operating system version {{ ansible_distribution }} is not supported"

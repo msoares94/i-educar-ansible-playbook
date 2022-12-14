@@ -1,7 +1,7 @@
 ---
 
 - name: Ensure databases are present
-  postgresql_db:
+  community.general.postgresql_db:
     name: "{{ item.name }}"
     lc_collate: "{{ item.lc_collate | default('pt_BR.UTF-8') }}"
     lc_ctype: "{{ item.lc_ctype | default('pt_BR.UTF-8') }}"
@@ -17,7 +17,7 @@
     ansible_ssh_pipelining: true
 
 - name: Setup databases extension
-  postgresql_ext:
+  community.general.postgresql_ext:
     db: "{{ item.0.name }}"
     name: "{{ item.1 | default(omit) }}"
   with_subelements:

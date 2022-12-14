@@ -14,6 +14,3 @@
   # See: https://github.com/ansible/ansible/issues/16048#issuecomment-229012509
   vars:
     ansible_ssh_pipelining: true
-
-#- debug:
-#    msg: "{{ ieducar__postgresql_setup_users }}"

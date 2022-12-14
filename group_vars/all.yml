@@ -20,7 +20,7 @@ system__time_zone: "{{ system_time_zone | default('America/Sao_Paulo') }}"
 ###########################################################################
 
 php__apt_repo: ppa:ondrej/php
-php__version: "{{ php_version | default('7.4') }}"
+php__version: "{{ php_version | default('8.0') }}"
 
 php__config_fpm_php_ini:
   - option: memory_limit
@@ -45,17 +45,17 @@ php__config_path: "/etc/php/{{ php__version }}/fpm"
 # 2.1.5
 # 2.2.11
 # 2.3.5
-composer__version: "{{ composer_version | default('2.2.11') }}"
+composer__version: "{{ composer_version | default('2.3.5') }}"
 
 ###########################################################################
 ### i-Educar Vars
 ###########################################################################
 
-ieducar__version: "{{ ieducar_version | default('2.6.9') }}"
+ieducar__version: "{{ ieducar_version | default('2.7.2') }}"
 ieducar__run_user: "{{ ansible_user|lower if ansible_user != 'root' else 'deployer' }}"
 ieducar__deployment_type: "{{ ieducar_deployment_type | default('ieducar-ce') }}"
-ieducar__version_reports_package_community_edition: "{{ ieducar_version_reports_package_community_edition | default('2.6') }}"
 ieducar__install_reports_package_community_edition: "{{ ieducar_install_reports_package_community_edition | default('true') }}"
+ieducar__version_reports_package_community_edition: "{{ ieducar_version_reports_package_community_edition | default('2.7') }}"
 ieducar__base_path: "{{ ieducar_base_path | default('/var/www/ieducar') }}"
 
 ieducar__postgresql_users:
@@ -71,7 +71,7 @@ ieducar__postgresql_users:
 
 ieducar__postgresql_databases:
   - {
-    name: "{{ ieducar_db_databasename | default('ieducar') }}",
+    name: "{{ ieducar_db_database | default('ieducar') }}",
     lc_collate: 'pt_BR.UTF-8',
     lc_ctype: 'pt_BR.UTF-8',
     encoding: 'UTF-8',
@@ -96,7 +96,7 @@ ieducar__name_domain: "{{ ieducar_name_domain | default('_') }}"
 ### PostgreSQL Vars
 ###########################################################################
 
-postgresql__version: "{{ postgresql_version | default(13) }}"
+postgresql__version: "{{ postgresql_version | default(14) }}"
 
 postgresql__gpg_url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
 postgresql__apt_repo: "deb http://apt.postgresql.org/pub/repos/apt/ {{ ansible_distribution_release }}-pgdg main"

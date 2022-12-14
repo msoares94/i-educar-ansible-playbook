@@ -1,11 +1,38 @@
 ---
 
-- name: Install Common, PostgreSQL, Redis Server, PHP-FPM, NGINX
+- name: Install Common Packages
   hosts: appservers
   roles:
     - common
+  tags:
+    - common
+
+- name: Install PostgreSQL
+  hosts: appservers
+  roles:
     - postgresql
+  tags:
+    - postgresql
+
+- name: Install Redis Server
+  hosts: appservers
+  roles:
+    - redis-server
+  tags:
+    - redis-server
+
+- name: Install PHP-FPM
+  hosts: appservers
+  roles:
     - php-fpm
+  tags:
+    - php-fpm
+
+- name: Install NGINX
+  hosts: appservers
+  roles:
+    - nginx
+  tags:
     - nginx
 
 - name: Install i-Educar
@@ -16,6 +43,8 @@
   vars:
     env_path: "{{ ieducar__base_path }}/.env"
     values:
+      - APP_ENV
+      - APP_DEBUG
       - DB_HOST
       - DB_PORT
       - DB_DATABASE
@@ -23,4 +52,15 @@
       - DB_PASSWORD
   roles:
     - i-educar
+  tags:
+    - i-educar
+
+- name: Install i-Educar Reports Package Community Edition
+  hosts: appservers
+  become: yes
+  become_user: "{{ ieducar__run_user }}"
+  become_method: sudo
+  roles:
+    - i-educar-reports-package
+  tags:
     - i-educar-reports-package
