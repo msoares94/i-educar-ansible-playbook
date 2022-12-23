@@ -51,11 +51,13 @@ composer__version: "{{ composer_version | default('2.3.5') }}"
 ### i-Educar Vars
 ###########################################################################
 
+ieducar__url_repository: "{{ ieducar_url_repository | default('https://github.com/portabilis/i-educar.git') }}"
 ieducar__version: "{{ ieducar_version | default('2.7.2') }}"
 ieducar__run_user: "{{ ansible_user|lower if ansible_user != 'root' else 'deployer' }}"
 ieducar__deployment_type: "{{ ieducar_deployment_type | default('ieducar-ce') }}"
 ieducar__install_reports_package_community_edition: "{{ ieducar_install_reports_package_community_edition | default('true') }}"
 ieducar__version_reports_package_community_edition: "{{ ieducar_version_reports_package_community_edition | default('2.7') }}"
+ieducar__url_repository_reports_package_community_edition: "{{ ieducar__url_repository_reports_package_community_edition | default('https://github.com/portabilis/i-educar-reports-package.git') }}"
 ieducar__base_path: "{{ ieducar_base_path | default('/var/www/ieducar') }}"
 
 ieducar__postgresql_users:

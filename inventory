@@ -5,8 +5,11 @@
 #ansible_user -> SSH user, this user should allow ssh based auth without requiring a password
 #ansible_become -> If ansible_user is not root, ansible_become must be set to true and defined ansible_become_method with sudo
 
-#127.0.0.1 ansible_user=root
-#127.0.0.1 ansible_user=ubuntu ansible_become=true ansible_become_method=sudo
+# 127.0.0.1 ansible_user=root
+# 127.0.0.1 ansible_user=ubuntu ansible_become=true ansible_become_method=sudo
+
+#177.87.104.172 ansible_user=educar ansible_become=true ansible_become_method=sudo ansible_port=23
+52.205.177.24 ansible_user=ubuntu ansible_become=true ansible_become_method=sudo
 
 ###########################################################################
 ### Set common variables for all hosts
@@ -20,32 +23,40 @@ system_check_memory_min_required=false
 ###########################################################################
 ### PostgreSQL Vars
 ###########################################################################
-postgresql_version=13
+postgresql_version=14
 
 ###########################################################################
 ### PHP Vars
 ###########################################################################
-php_version=7.4
+php_version=8.0
 
 ###########################################################################
 ### Composer Vars
 ###########################################################################
-composer_version=2.2.11
+composer_version=2.3.5
 
 ###########################################################################
 ### i-Educar Vars
 ###########################################################################
-ieducar_version=2.6.9
+ieducar_url_repository=https://github.com/marcosoliveirasoares94/i-educar.git
+
+ieducar_version=2.7.2
 
 #ieducar_base_path=/var/www/ieducar
 
-#ieducar_db_database=
-#ieducar_db_username=
-#ieducar_db_password=
+#ieducar_app_env=production
+#ieducar_app_debug=false
+
+#ieducar_db_host=127.0.0.1
+#ieducar_db_port=5432
+#ieducar_db_database=ieducar
+#ieducar_db_username=ieducar
+#ieducar_db_password=ieducar
 
 #ieducar_deployment_type=ieducar-ce
-ieducar_version_reports_package_community_edition=2.6
 ieducar_install_reports_package_community_edition=true
+ieducar_version_reports_package_community_edition=2.7
+ieducar_url_repository_reports_package_community_edition=https://github.com/marcosoliveirasoares94/i-educar-reports-package.git
 
 #
 # Accepted values in ieducar__conf_nginx

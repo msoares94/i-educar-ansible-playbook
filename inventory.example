@@ -36,6 +36,8 @@ composer_version=2.3.5
 ###########################################################################
 ### i-Educar Vars
 ###########################################################################
+ieducar_url_repository=https://github.com/marcosoliveirasoares94/i-educar.git
+
 ieducar_version=2.7.2
 
 #ieducar_base_path=/var/www/ieducar
@@ -52,6 +54,7 @@ ieducar_version=2.7.2
 #ieducar_deployment_type=ieducar-ce
 ieducar_install_reports_package_community_edition=true
 ieducar_version_reports_package_community_edition=2.7
+ieducar_url_repository_reports_package_community_edition=https://github.com/marcosoliveirasoares94/i-educar-reports-package.git
 
 #
 # Accepted values in ieducar__conf_nginx

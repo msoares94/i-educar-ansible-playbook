@@ -8,7 +8,7 @@
 
 - name: Git Checkout the Report Package of i-Educar {{ ieducar__version }}
   git:
-    repo: https://github.com/portabilis/i-educar-reports-package.git
+    repo: "{{ ieducar__url_repository_reports_package_community_edition }}"
     version: "{{ ieducar__version_reports_package_community_edition }}"
     dest: "{{ ieducar__base_path }}/packages/portabilis/i-educar-reports-package"
     clone: yes

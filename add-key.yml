@@ -9,7 +9,7 @@
   tasks:
 
   - name: "Copy the authorized key file from"
-    authorized_key:
+    ansible.posix.authorized_key:
       user: "{{ ansible_user }}"
       state: "{{ status }}"
       key: "{{ lookup('file', '{{ key }}')}}"

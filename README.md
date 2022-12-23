@@ -33,6 +33,7 @@ Projeto para automatizar a instalação de Software Público [i-Educar](https://
    - Ansible ^2.10
         
             Alguns módulos fazem parte das coleções:
+                ansible.posix
                 community.general
                 community.postgresql
 
@@ -41,6 +42,7 @@ Projeto para automatizar a instalação de Software Público [i-Educar](https://
             Para verificar os módulos instalados, execute ansible-galaxy collection list
 
             Para instalá-lo, execute:
+                ansible-galaxy collection install ansible.posix
                 ansible-galaxy collection install community.general
                 ansible-galaxy collection install community.postgresql
             

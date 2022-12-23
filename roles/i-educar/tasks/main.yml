@@ -21,7 +21,7 @@
   become: yes
   become_user: root
   git:
-    repo: https://github.com/portabilis/i-educar.git
+    repo: "{{ ieducar__url_repository }}"
     version: "{{ ieducar__version }}"
     dest: "{{ ieducar__base_path }}"
     clone: yes
