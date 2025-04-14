@@ -1,149 +1,109 @@
-# Instale o i-Educar com o Ansible
-Projeto para automatizar a instalação de Software Público [i-Educar](https://ieducar.org).
+# i-Educar Ansible Playbook
+
+Repositório de automação para instalação e configuração completa da aplicação [i-Educar](https://github.com/portabilis/i-educar) utilizando Ansible.
 
 > Status do projeto: Em desenvolvimento :warning:
+> 
+## 📦 Estrutura do Projeto
 
-### Índice
-    
-   * [Descrição do projeto](#descrição-do-projeto)
-   * [Pré-requisitos](#pré-requisitos)
-   * [Dependências](#dependências)
-   * [Modo de autenticação no servidor de destino](#modo-de-autenticação-no-servidor-de-destino)
-   * [Executando o manual](#executando-o-manual)
-   * [Variáveis de função](#variáveis-de-função)
-   * [Licença](#licença)
+```bash
+.
+├── group_vars/
+│   ├── all/
+│   │   └── *.yml                       # Variáveis globais
+│   ├── development/
+│   │   └── main.yml                    # Configuração do ambiente de desenvolvimento
+│   ├── staging/
+│   │   └── main.yml                    # Configuração do ambiente de staging
+│   └── producao/
+│       └── main.yml                    # Configuração do ambiente de produção
+│
+├── roles/
+│   ├── common/
+│   ├── postgresql/
+│   ├── redis-server/
+│   ├── php-fpm/
+│   ├── nginx/
+│   ├── i-educar/
+│   ├── i-educar-reports-package/
+│   └── i-educar-educacenso-package/
+│
+├── inventory.ini                       # Inventário dos hosts
+└── playbook.yml                        # Playbook principal
+```
 
---------------
+## 🛠️ Preparando o Playbook
 
-### Descrição do projeto
-Projeto para automatizar a instalação de Software Público [i-Educar](https://ieducar.org).
+1. Edite o `inventory.ini` e adicione seus servidores, `10.0.0.1` e `10.0.0.2` são exemplos, ajuste para valores reais:
 
---------------
+```ini
+[ieducar]
+10.0.0.1 ansible_user=root
+10.0.0.2 ansible_user=ubuntu ansible_become=true ansible_become_method=sudo
+```
+> Para mais opções de variáveis, consulte o inventory.ini.example ou os arquivos em `group_vars`
 
-### Pré-requisitos
--  O comando não pode ser executado no servidor de destino da instalação, pois durante o processo de instalação o servidor é reiniciado.
+## Modo de autenticação no servidor de destino
 
-- O arquivo `inventory.example` deve ser renomeado para `inventory`
+### 🔐 Chave SSH
 
---------------
+```bash
+ssh-keygen -t rsa
+chmod 400 ~/.ssh/id_rsa
+ansible-playbook add-key.yml -i inventory.ini --key-file ~/.ssh/id_rsa --extra-vars "key=~/.ssh/id_rsa.pub"
+```
 
-### Dependências
-------------
+### 🔑 Senha
 
-   - Ansible ^2.10
-        
-            Alguns módulos fazem parte das coleções:
-                ansible.posix
-                community.general
-                community.postgresql
+Sem etapas adicionais.
 
-            Talvez você já tenha esta coleção instalada se estiver usando o pacote ansible, não está incluído em ansible-core.
-            
-            Para verificar os módulos instalados, execute ansible-galaxy collection list
+---
 
-            Para instalá-lo, execute:
-                ansible-galaxy collection install ansible.posix
-                ansible-galaxy collection install community.general
-                ansible-galaxy collection install community.postgresql
-            
-   - Python ^3.8
+## 🚀 Executando o Playbook
 
---------------
+### Com chave SSH:
 
-### Modo de autenticação no servidor de destino
+```bash
+ansible-playbook playbook.yml -i inventory.ini --key-file ~/.ssh/id_rsa
+```
 
-- #### Chaves SSH
+### Com senha:
 
-  Gerar chave SSH
-    - ```ssh-keygen -t rsa```
+```bash
+ansible-playbook playbook.yml -i inventory.ini --ask-pass
+```
 
-  Definir permissão de chave
-    - ```chmod 400 ~/.ssh/id_rsa```
+#### Execute com o grupo de hosts desejado (ex: `staging`, `development`, `producao`):
 
-  Adicionar chave no servidor
-    - ```ansible-playbook add-key.yml -i inventory --key-file ~/.ssh/id_rsa --extra-vars "key=~/.ssh/id_rsa.pub"```
+```bash
+ansible-playbook playbook.yml -i inventory.ini -l staging
+```
 
-- #### Senha
 
-    Não há etapas a serem executadas!
+## 🛠️ Features
 
---------------
+- Instalação do i-Educar com base na branch/tag configurada
+- Suporte a múltiplos ambientes (staging, produção etc.)
+- Configuração automatizada de:
+  - PostgreSQL com otimizações por RAM
+  - Redis
+  - PHP-FPM com pools customizados
+  - NGINX com suporte a domínio, SSL e Let's Encrypt
+- Geração do `.env` com variáveis sensíveis
+- Permissões adequadas com `ACL`
+- Integração opcional com pacote de relatórios da comunidade
+- Integração opcional com pacote do educacenso da comunidade
 
-### Executando o manual
+## 📋 Requisitos
 
-- #### Servidor de destino com chaves ssh
-    ```ansible-playbook playbook.yml -i inventory --key-file ~/.ssh/id_rsa```
+- Servidores Ubuntu 22.04+ com acesso via SSH
+- Ansible 2.14+
+- Acesso com permissões root ou usuário `sudo` configurado
 
-- #### Servidor de destino com senha
-    ```ansible-playbook playbook.yml -i inventory --ask-pass```
+## 📄 Licença
 
---------------
+Este projeto segue os princípios de software livre e está sob a [licença GPL v2.0](https://www.gnu.org/licenses/old-licenses/gpl-2.0.html).
 
-### Variáveis de função
+---
 
-    # System
-    system_locale: pt_BR.UTF-8
-    system_language: pt_BR.UTF-8
-    system_time_zone: America/Sao_Paulo
-
-    # Composer
-    composer_version: 2.3.5
-
-    # PHP
-    php_version: 8.0
-
-    # i-Educar
-    ieducar_version: 2.7.2
-
-    # Postgresql
-    postgresql_version: 14
-    postgresql_encoding: 'UTF-8'
-    postgresql_locale: 'pt_BR.UTF-8'
-    postgresql_recreate_cluster: true
-
-    # pg_hba.conf
-        postgresql__pg_hba_entries:
-        - { type: local, database: all, user: postgres, address: '', auth_method: peer }
-        - { type: local, database: all, user: all, address: '', auth_method: peer }
-        - { type: host, database: all, user: all, address: '127.0.0.1/32', auth_method: md5 }
-        - { type: host, database: all, user: all, address: all, auth_method: md5 }
-        - { type: host, database: all, user: all, address: '::1/128', auth_method: md5 }
-        # starting version 10 there is replication role
-        - { type: local, database: replication, user: all, address: '', auth_method: peer }
-        - { type: host, database: replication, user: all, address: '127.0.0.1/32', auth_method: md5 }
-        - { type: host, database: replication, user: all, address: '::1/128', auth_method: md5 }
-    
-    # postgresql.conf
-        postgresql__global_conf_options:
-        - option: listen_addresses
-            value: '*'
-        - option: log_min_duration_statement
-            value: 1000
-        - option: max_connections
-            value: 250
-        - option: shared_buffers
-            value: 256MB
-        - option: effective_cache_size
-            value: 768MB
-        - option: maintenance_work_mem
-            value: 64MB
-        - option: checkpoint_completion_target
-            value: 0.9
-        - option: wal_buffers
-            value: 7864kB
-        - option: default_statistics_target
-            value: 100
-        - option: random_page_cost
-            value: 1.1
-        - option: effective_io_concurrency
-            value: 200
-        - option: work_mem
-            value: 524kB
-        - option: min_wal_size
-            value: 1GB
-        - option: max_wal_size
-            value: 4GB
-
-### Licença
--------
-[GNU GENERAL PUBLIC LICENSE v3](LICENSE)
+Para mais informações sobre o i-Educar: [https://ieducar.org](https://ieducar.org)
