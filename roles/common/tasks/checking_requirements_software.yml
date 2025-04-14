@@ -1,16 +1,13 @@
----
-
 - name: Checking the supported operating system
   assert:
     that:
-      -  "'{{ ansible_distribution }}' == 'Ubuntu'"
+      - ansible_distribution == "Ubuntu"
     success_msg: "Supported operating system"
     fail_msg: "{{ ansible_distribution }} is not a supported operating system"
 
 - name: Checking operational system supported version
   assert:
     that:
-      -  "'{{ ansible_distribution_version }}' >= '18.04'"
-      -  "'{{ ansible_distribution_version }}' <= '22.04'"
+      - ansible_distribution_version is version('24.04', '==')
     success_msg: "Version supported operational system"
-    fail_msg: "{{ ansible_distribution_version }} operating system version {{ ansible_distribution }} is not supported"
+    fail_msg: "{{ ansible_distribution }} version {{ ansible_distribution_version }} is not supported"

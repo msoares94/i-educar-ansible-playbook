@@ -1,66 +1,30 @@
----
+- hosts: ieducar
+  become: true
 
-- name: Install Common Packages
-  hosts: appservers
   roles:
-    - common
-  tags:
-    - common
+    - role: common
+      tags: [common]
 
-- name: Install PostgreSQL
-  hosts: appservers
-  roles:
-    - postgresql
-  tags:
-    - postgresql
+    - role: postgresql
+      tags: [postgresql]
 
-- name: Install Redis Server
-  hosts: appservers
-  roles:
-    - redis-server
-  tags:
-    - redis-server
+    - role: redis-server
+      tags: [redis-server]
 
-- name: Install PHP-FPM
-  hosts: appservers
-  roles:
-    - php-fpm
-  tags:
-    - php-fpm
+    - role: php-fpm
+      tags: [php-fpm]
 
-- name: Install NGINX
-  hosts: appservers
-  roles:
-    - nginx
-  tags:
-    - nginx
+    - role: nginx
+      tags: [nginx]
 
-- name: Install i-Educar
-  hosts: appservers
-  become: yes
-  become_user: "{{ ieducar__run_user }}"
-  become_method: sudo
-  vars:
-    env_path: "{{ ieducar__base_path }}/.env"
-    values:
-      - APP_ENV
-      - APP_DEBUG
-      - DB_HOST
-      - DB_PORT
-      - DB_DATABASE
-      - DB_USERNAME
-      - DB_PASSWORD
-  roles:
-    - i-educar
-  tags:
-    - i-educar
+    - role: i-educar
+      become_user: "{{ app__run_user }}"
+      tags: [i-educar]
 
-- name: Install i-Educar Reports Package Community Edition
-  hosts: appservers
-  become: yes
-  become_user: "{{ ieducar__run_user }}"
-  become_method: sudo
-  roles:
-    - i-educar-reports-package
-  tags:
-    - i-educar-reports-package
+    - role: i-educar-reports-package
+      become_user: "{{ app__run_user }}"
+      tags: [i-educar-reports-package]
+
+    - role: i-educar-educacenso-package
+      become_user: "{{ app__run_user }}"
+      tags: [i-educar-educacenso-package]

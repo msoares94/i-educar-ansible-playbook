@@ -1,5 +1,4 @@
 ---
-
 - name: Ensure sudo group is present
   group:
     name: sudo
@@ -15,7 +14,7 @@
 
 - name: Add service user and add it to sudo
   user:
-    name: "{{ ieducar__run_user }}"
+    name: "{{ app__run_user }}"
     groups: sudo
     comment: ""
     append: yes
@@ -57,7 +56,7 @@
     autoremove: yes
     state: absent
     force: true
-  with_items:
+  loop:
     - yarn
 
 - name: Check if a reboot is needed for server
@@ -80,7 +79,7 @@
   apt:
     name: "{{ item }}"
     state: present
-  with_items:
+  loop:
     - jq
     - acl
     - git
@@ -89,7 +88,6 @@
     - yarn
     - wget
     - curl
-    - s3cmd
     - unzip
     - nodejs
     - openssl

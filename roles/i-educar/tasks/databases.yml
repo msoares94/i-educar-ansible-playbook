@@ -1,5 +1,4 @@
 ---
-
 - name: Ensure databases are present
   postgresql_db:
     name: "{{ item.name }}"
@@ -10,10 +9,8 @@
     owner: "{{ item.owner | default(postgresql__user) }}"
     state: "{{ item.state | default('present') }}"
   with_items: "{{ ieducar__postgresql_databases }}"
-  become: yes
   become_user: "{{ postgresql__user }}"
   register: ieducar__postgresql_setup_databases
-  # See: https://github.com/ansible/ansible/issues/16048#issuecomment-229012509
   vars:
     ansible_ssh_pipelining: true
 
@@ -25,8 +22,6 @@
     - "{{ ieducar__postgresql_databases }}"
     - extension
     - skip_missing: true
-  become: yes
   become_user: "{{ postgresql__user }}"
-  # See: https://github.com/ansible/ansible/issues/16048#issuecomment-229012509
   vars:
     ansible_ssh_pipelining: true

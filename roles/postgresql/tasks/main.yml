@@ -1,9 +1,8 @@
 ---
-
 - name: Checking supported version
   assert:
     that:
-      -  "{{ postgresql__version }} >= 13"
+      - postgresql__version | int >= 14
     success_msg: "Supported PostgreSQL {{ postgresql__version }} version"
     fail_msg: "Not a supported PostgreSQL version {{ postgresql__version }}"
 

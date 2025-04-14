@@ -1,0 +1,16 @@
+---
+app__run_user: "{{ ansible_user | lower if ansible_user != 'root' else 'deployer' }}"
+
+system__memory_min_required: 2
+system__check_memory_min_required: "{{ system_check_memory_min_required | default('true') }}"
+
+system__vcpu_min_required: 2
+system__check_vcpu_min_required: "{{ system_check_vcpu_min_required | default('true') }}"
+
+system__locales:
+  - 'en_US.UTF-8'
+  - 'pt_BR.UTF-8'
+
+system__locale: "{{ system_locale | default('pt_BR.UTF-8') }}"
+system__language: "{{ system_language | default('pt_BR.UTF-8') }}"
+system__time_zone: "{{ system_time_zone | default('America/Sao_Paulo') }}"

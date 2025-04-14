@@ -1,0 +1,14 @@
+; File managed by Ansible - do not edit manually
+; Custom PHP-FPM Pool settings (www.conf)
+
+[www]
+user = www-data
+group = www-data
+listen = /run/php/php{{ php__version }}-fpm.sock
+listen.owner = www-data
+listen.group = www-data
+php_admin_value[umask] = 002
+
+{% for item in php__config_fpm_pool_www_conf %}
+{{ item.option }} = {{ item.value }}
+{% endfor %}

@@ -1,7 +1,6 @@
 ---
-
 - name: restart nginx
-  become: yes
+  become: true
   become_user: root
   service:
     name: nginx
@@ -10,7 +9,7 @@
   listen: restart ieducar
 
 - name: restart php-fpm
-  become: yes
+  become: true
   become_user: root
   service:
     name: php{{ php__version }}-fpm
@@ -19,7 +18,7 @@
   listen: restart ieducar
 
 - name: restart postgresql
-  become: yes
+  become: true
   become_user: root
   service:
     name: postgresql

@@ -1,66 +1,103 @@
 ---
-
-- name: Setup cluster to default to UTF-8 | Drop PostgreSQL Cluster
-  # if the dbs haven't been created yet, we want to destroy the whole db
-  # cluster and recreate it with proper utf8 support.
+- name: Drop PostgreSQL cluster if needed (Ubuntu only)
   shell: pg_dropcluster --stop {{ postgresql__version }} main
-  when: postgresql__setup.changed and postgresql__recreate_cluster # only do this if the dbs haven't been created yet
-  #ignore_errors: yes
+  args:
+    removes: "/etc/postgresql/{{ postgresql__version }}/main"
+  when: ansible_distribution == 'Ubuntu' and postgresql__setup.changed and postgresql__recreate_cluster
 
-- name: Setup cluster to default to UTF-8 | Create PostgreSQL Cluster
-  # if the dbs haven't been created yet, we want to destroy the whole db
-  # cluster and recreate it with proper utf8 support. From http://ph.ly/pg
-  shell: pg_createcluster -u "{{ postgresql__user }}" -g "{{ postgresql__group }}" --encoding "{{ postgresql__encoding }}" --locale="{{ postgresql__locale }}" --lc-collate="{{ postgresql__locale }}" {{ postgresql__version }} main
-  when: postgresql__setup.changed and postgresql__recreate_cluster # only do this if the dbs haven't been created yet
+- name: Create PostgreSQL cluster with UTF-8 (Ubuntu only)
+  shell: >
+    pg_createcluster -u "{{ postgresql__user }}" -g "{{ postgresql__group }}"
+    --encoding "{{ postgresql__encoding }}"
+    --locale="{{ postgresql__locale }}"
+    --lc-collate="{{ postgresql__locale }}"
+    {{ postgresql__version }} main
+  args:
+    creates: "/etc/postgresql/{{ postgresql__version }}/main"
+  when: ansible_distribution == 'Ubuntu' and postgresql__setup.changed and postgresql__recreate_cluster
 
-# TODO: Tentar remover passo e reiniciar o serviço via handler 
-- name: Setup cluster to default to UTF-8 | Restart PostgreSQL Cluster
-  #shell: service postgresql restart
+- name: Restart PostgreSQL after cluster recreation
   service:
     name: postgresql
     state: restarted
+  when:
+    - ansible_distribution == 'Ubuntu'
+    - postgresql__setup.changed
+    - postgresql__recreate_cluster
 
-- name: Check include configuration
-  lineinfile:
-    dest: "{{ postgresql__install_base_path }}/postgresql.conf"
-    regexp: "^#?include_dir.+$"
-    line: "include_dir = 'conf.d'"
+- name: Wait for PostgreSQL socket to be available
+  wait_for:
+    path: "/var/run/postgresql/.s.PGSQL.5432"
     state: present
-    backup: no
-  notify: restart postgresql
+    timeout: 60
+  when:
+    - ansible_distribution == 'Ubuntu'
+    - postgresql__setup.changed
+    - postgresql__recreate_cluster
 
-- name: Configure global settings
-  lineinfile:
-    dest: "{{ postgresql__install_base_path }}/postgresql.conf"
-    backrefs: yes
-    regexp: "^#?{{ item.option }}.+$"
-    line: "{{ item.option }} = '{{ item.value }}'"
-    state: "{{ item.state | default('present') }}"
-    backup: yes
-  with_items: "{{ postgresql__global_conf_options }}"
-  notify: restart postgresql
+- name: Select PostgreSQL tuning preset based on memory
+  set_fact:
+    postgresql__global_conf_selected: >-
+      {{
+        (
+          postgresql__tuning_12gb
+          if ansible_memtotal_mb >= 12000 else
+          postgresql__tuning_8gb
+          if ansible_memtotal_mb >= 8000 else
+          postgresql__tuning_4gb
+          if ansible_memtotal_mb >= 4000 else
+          postgresql__tuning_2gb
+          if ansible_memtotal_mb >= 2048 else
+          postgresql__tuning_default
+        ) | default([])
+      }}
 
-- name: Configure host based authentication
-  template:
-    src: "pg_hba.conf.j2"
-    dest: "{{ postgresql__install_base_path }}/pg_hba.conf"
-    backup: yes
-    owner: "{{ postgresql__user }}"
-    group: "{{ postgresql__group }}"
-    mode: 0644
-  notify: restart postgresql
-  when: postgresql__pg_hba_entries is defined
+- name: Fail if no PostgreSQL tuning config is available
+  fail:
+    msg: "No PostgreSQL tuning configuration is available. Please check the variables in all.yml."
+  when: postgresql__global_conf_selected | length == 0
 
-# - name: Configure host based authentication
-#   template:
-#     src: " {{ item}} "
-#     dest: "{{ postgresql__install_base_path }}/{{ item | basename | regex_replace('.j2','') }}"
-#     backup: yes
-#     owner: "{{ postgresql__user }}"
-#     group: "{{ postgresql__group }}"
-#     mode: 0644
-#   with_items: "{{ pg_hba.conf.j2 }}"
-#   notify: restart postgresql
+- name: Apply all PostgreSQL config changes
+  block:
+    - name: Check include configuration
+      lineinfile:
+        dest: "{{ postgresql__install_base_path }}/postgresql.conf"
+        regexp: "^#?include_dir.+$"
+        line: "include_dir = 'conf.d'"
+        state: present
+        backup: yes
+
+    - name: Create postgresql.conf from template
+      template:
+        src: postgresql-99-custom.conf.j2
+        dest: "{{ postgresql__install_base_path }}/conf.d/99-custom.conf"
+        backup: yes
+        owner: "{{ postgresql__user }}"
+        group: "{{ postgresql__group }}"
+        mode: '0644'
+      notify: restart postgresql
+
+    - name: Configure host based authentication
+      template:
+        src: "pg_hba.conf.j2"
+        dest: "{{ postgresql__install_base_path }}/pg_hba.conf"
+        backup: yes
+        owner: "{{ postgresql__user }}"
+        group: "{{ postgresql__group }}"
+        mode: '0644'
+      when: postgresql__pg_hba_entries is defined
+
+    - name: Validate PostgreSQL configuration
+      become_user: "{{ postgresql__user }}"
+      command: >
+        {{ postgresql__bin_path }}/postgres
+        -D {{ postgresql__data_work_dir }}
+        -c config_file={{ postgresql__install_base_path }}/postgresql.conf
+        -C config_file
+      register: pg_conf_check
+      changed_when: false
+      failed_when: pg_conf_check.rc != 0
+  notify: restart postgresql
 
 # - name: Schedule backups
 #   cron:

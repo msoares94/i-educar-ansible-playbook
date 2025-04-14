@@ -1,0 +1,34 @@
+---
+nginx__config_path: "{{ nginx_config_path | default('/etc/nginx') }}"
+nginx__deploy_path: "{{ nginx_deploy_path | default('/var/www/html') }}"
+
+nginx__worker_processes: "auto"
+nginx__worker_connections: 1024
+nginx__keepalive_timeout: 65
+nginx__types_hash_max_size: 2048
+
+nginx__access_log: "/var/log/nginx/access.log"
+nginx__error_log: "/var/log/nginx/error.log"
+
+nginx__gzip: true
+nginx__gzip_types:
+  - text/plain
+  - text/css
+  - application/json
+  - application/javascript
+  - text/xml
+  - application/xml
+  - application/xml+rss
+  - text/javascript
+
+nginx__global_settings:
+  - option: client_body_buffer_size
+    value: 64k
+  - option: client_max_body_size
+    value: 100m
+  - option: client_body_in_single_buffer
+    value: on
+  - option: client_header_buffer_size
+    value: 1m
+  - option: large_client_header_buffers
+    value: "4 8k"

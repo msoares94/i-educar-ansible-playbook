@@ -1,67 +1,135 @@
 ---
+- name: Select proper NGINX site config template
+  set_fact:
+    ieducar__nginx_template: >-
+      nginx/ieducar-{{ ieducar__nginx_template_mode }}.conf.j2
+
+- name: Ensure required vars are defined when using domain and SSL
+  assert:
+    that:
+      - ieducar__name_domain is defined and ieducar__name_domain != ''
+      - letsencrypt__cert_name is defined and letsencrypt__cert_name != ''
+    fail_msg: "To use domain + SSL you must define ieducar__name_domain and letsencrypt__cert_name."
+  when: ieducar__with_domain | bool and letsencrypt__ssl | bool
+
+- name: Validate domain format
+  assert:
+    that:
+      - (ieducar__name_domain | default('')) is match("^[a-zA-Z0-9.-]+\\.[a-z]{2,}$")
+    fail_msg: "Domain '{{ ieducar__name_domain }}' is invalid."
+  when: ieducar__with_domain | bool
+
+- name: Ensure certificate paths are set when not using Let's Encrypt
+  assert:
+    that:
+      - ieducar__ssl_certificate_path is defined
+      - ieducar__ssl_certificate_key_path is defined
+    fail_msg: "Manual SSL selected but certificate paths not defined."
+  when: ieducar__with_domain | bool and ieducar__use_ssl | bool and not ieducar__use_letsencrypt | bool
 
 - include_tasks: create_users.yml
 - include_tasks: databases.yml
 - include_tasks: grant_users.yml
 
-# TODO: Tentar remover passo e reiniciar o serviço via handler 
 - name: Setup cluster to default to UTF-8 | Restart PostgreSQL Cluster
-  become: yes
+  become: true
   become_user: root
   service:
     name: postgresql
     state: restarted
 
-# - name: Download i-Educar {{ ieducar__version }}
-#   get_url:
-#     url: https://github.com/portabilis/i-educar/releases/download/{{ ieducar__version }}/ieducar-{{ ieducar__version }}.tar.gz
-#     dest: /home/{{ ieducar__run_user }}/ieducar-{{ ieducar__version }}.tar.gz
+- name: Ensure i-Educar base path exists
+  become: true
+  become_user: root
+  file:
+    path: "{{ ieducar__base_path }}"
+    state: directory
+    owner: "{{ app__run_user }}"
+    group: www-data
+    mode: '0755'
 
 - name: Git Checkout i-Educar {{ ieducar__version }}
-  become: yes
-  become_user: root
   git:
     repo: "{{ ieducar__url_repository }}"
     version: "{{ ieducar__version }}"
     dest: "{{ ieducar__base_path }}"
+    force: yes
+    update: no
     clone: yes
-    update: yes
 
-# - name: "Extract package i-Educar {{ ieducar__version }}"
-#   #become: yes
-#   #become_user: "{{ ieducar__run_user }}"
-#   #become_method: sudo
-#   shell: |
-#     sudo rm -rf {{ ieducar__base_path }} || true
-#     [ -d /var/www ] || sudo mkdir -p /var/www
-#     sudo tar -zxf /home/{{ ieducar__run_user }}/ieducar-{{ ieducar__version }}.tar.gz -C /var/www/
-#     sudo mv {{ ieducar__base_path }}-{{ ieducar__version }} {{ ieducar__base_path }}
+- name: Download Composer installer
+  get_url:
+    url: https://getcomposer.org/installer
+    dest: /tmp/composer-setup.php
+    mode: '0755'
 
-- name: "Install package composer {{ composer__version }}"
+- name: Validate Composer installer hash
   shell: |
-    sudo curl -sS https://getcomposer.org/installer -o composer-setup.php
-    HASH=`curl -sS https://composer.github.io/installer.sig`
-    sudo php -r "if (hash_file('SHA384', 'composer-setup.php') === '$HASH') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
-    sudo php composer-setup.php --install-dir=/usr/local/bin --filename=composer --version={{ composer__version }}
+    HASH=$(curl -sS https://composer.github.io/installer.sig)
+    php -r "if (hash_file('SHA384', '/tmp/composer-setup.php') === '$HASH') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('/tmp/composer-setup.php'); } echo PHP_EOL;"
+  args:
+    executable: /bin/bash
 
-- name: "Copy file .env if not exists"
-  shell: |
-    cd {{ ieducar__base_path }}
-    sudo php -r "file_exists('.env') || copy('.env.example', '.env');"
-
-- name: "Fix permission i-Educar"
-  become: yes
+- name: Install Composer
+  become: true
   become_user: root
-  shell: |
-    sudo chown -R {{ ieducar__run_user }}:www-data {{ ieducar__base_path }}
-    sudo chmod g+s {{ ieducar__base_path }}
-    sudo setfacl -R -m g::rwx {{ ieducar__base_path }}
-    sudo setfacl -d -m o::rx {{ ieducar__base_path }}
+  command: php /tmp/composer-setup.php --install-dir=/usr/local/bin --filename=composer --version={{ composer__version }}
+
+- name: Create .env file from .env.example if not exists
+  command: cp .env.example .env
+  args:
+    chdir: "{{ ieducar__base_path }}"
+    creates: "{{ ieducar__base_path }}/.env"
+
+# - name: "Fix permission i-Educar"
+#   become: true
+#   shell: |
+#     chown -R {{ app__run_user }}:www-data {{ ieducar__base_path }}
+#     chmod g+s {{ ieducar__base_path }}
+#     setfacl -R -m g::rwx {{ ieducar__base_path }}
+#     setfacl -d -m o::rx {{ ieducar__base_path }}
+
+- name: Set i-Educar permissions
+  become_user: root
+  block:
+    - name: Set owner and group recursively
+      file:
+        path: "{{ ieducar__base_path }}"
+        owner: "{{ app__run_user }}"
+        group: www-data
+        recurse: yes
+
+    - name: Set setgid bit for group inheritance
+      file:
+        path: "{{ ieducar__base_path }}"
+        mode: '2775'
+
+    - name: Set default ACLs on i-Educar base path (user and group)
+      ansible.posix.acl:
+        path: "{{ ieducar__base_path }}"
+        default: true
+        entity: "{{ item.entity }}"
+        etype: "{{ item.etype }}"
+        permissions: "{{ item.permissions }}"
+        state: present
+      loop:
+        - { entity: "{{ app__run_user }}", etype: user, permissions: rwx }
+        - { entity: www-data, etype: group, permissions: rwx }
+      loop_control:
+        label: "{{ item.entity }}"
+
+    - name: Set default ACLs on i-Educar base path (others)
+      ansible.posix.acl:
+        path: "{{ ieducar__base_path }}"
+        default: true
+        etype: other
+        permissions: rx
+        state: present
 
 - name: Read values from environment
   shell: "source {{ env_path }}; echo ${{ item|upper }}"
   register: output
-  with_items: "{{ values }}"
+  loop: "{{ values }}"
   args:
     executable: /bin/bash
   changed_when: false
@@ -69,7 +137,7 @@
 - name: Store read value
   set_fact:
     "{{ item.0 }}": "{{ item.1.stdout }}"
-  when: '{{ item.0 }} is undefined'
+  when: item.0 is undefined
   with_together:
     - "{{ values }}"
     - "{{ output.results }}"
@@ -81,39 +149,87 @@
     backrefs: yes
     regexp: "^{{ item.option }}.+$"
     line: "{{ item.option }}={{ item.value }}"
-    state: "{{ item.state | default('present') }}"
+    state: present
     backup: yes
-  loop:
-    - { option: 'APP_ENV', value: "{{ ieducar_app_env if ieducar_app_env is defined else 'local' }}" }
-    - { option: 'APP_DEBUG', value: "{{ ieducar_app_debug if ieducar_app_debug is defined else 'true' }}" }
-    - { option: 'DB_HOST', value: "{{ ieducar_db_host if ieducar_db_host is defined else '127.0.0.1' }}" }
-    - { option: 'DB_PORT', value: "{{ ieducar_db_port if ieducar_db_port is defined else '5432' }}" }
-    - { option: 'DB_DATABASE', value: "{{ ieducar_db_database if ieducar_db_database is defined else DB_DATABASE }}" }
-    - { option: 'DB_USERNAME', value: "{{ ieducar_db_username if ieducar_db_username is defined else DB_USERNAME }}" }
-    - { option: 'DB_PASSWORD', value: "{{ ieducar_db_password if ieducar_db_password is defined else DB_PASSWORD }}" }
+  loop: "{{ ieducar__env_vars }}"
+  loop_control:
+    label: "{{ item.option }}"
 
-- name: Copy site-available i-Educar to Nginx
-  become: yes
+- name: Deploy NGINX location snippet for i-Educar
   become_user: root
   template:
-    src: "{{ ieducar__conf_nginx }}"
-    dest: "{{ nginx__config_path }}/sites-available/ieducar"
+    src: nginx/snippets/ieducar-location-snippets.conf
+    dest: "{{ nginx__config_path }}/snippets/ieducar-location-snippets.conf"
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart nginx
 
-- name: "Remove site-enabled default of Nginx"
-  become: yes
+- name: Deploy i-Educar site config for NGINX
   become_user: root
-  shell: |
-    sudo rm -rf /etc/nginx/sites-enabled/*
+  template:
+    src: "{{ ieducar__nginx_template }}"
+    dest: "{{ nginx__config_path }}/sites-available/ieducar.conf"
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart nginx
 
-- name: "Enable site-enabled i-Educar of Nginx"
-  become: yes
+- name: Remove default NGINX site-enabled
   become_user: root
-  shell: |
-    sudo ln -sf {{ nginx__config_path }}/sites-available/ieducar {{ nginx__config_path }}/sites-enabled/ieducar
+  file:
+    path: "{{ nginx__config_path }}/sites-enabled/default"
+    state: absent
 
-- name: "Install i-Educar {{ ieducar__version }}"
+- name: Add group to user {{ app__run_user }}
+  become_user: root
+  user:
+    name: "{{ app__run_user }}"
+    groups: "{{ item }}"
+    append: yes
+  loop:
+    - www-data
+
+- name: Enable site by creating symlink to sites-enabled
+  become_user: root
+  file:
+    src: "{{ nginx__config_path }}/sites-available/ieducar.conf"
+    dest: "{{ nginx__config_path }}/sites-enabled/ieducar.conf"
+    state: link
+  notify: restart nginx
+
+- name: Run Laravel install command (composer)
+  environment:
+    COMPOSER_ALLOW_SUPERUSER: "1"
+    COMPOSER_PROCESS_TIMEOUT: "900"
+  args:
+    chdir: "{{ ieducar__base_path }}"
+    executable: /bin/bash
   shell: |
-    cd {{ ieducar__base_path }}
-    sudo yes | composer new-install
-    sudo php artisan storage:link
+    composer new-install
   notify: restart ieducar
+
+- name: Create symlink for Laravel storage if not exists
+  command: php artisan storage:link
+  args:
+    chdir: "{{ ieducar__base_path }}"
+    creates: "{{ ieducar__base_path }}/public/storage"
+  notify: restart ieducar
+
+- name: "Ensure storage/logs ACLs are correctly set for {{ app__run_user }} and www-data"
+  become: true
+  block:
+    - name: "Ensure {{ app__run_user }} and www-data have access to storage/logs"
+      ansible.posix.acl:
+        path: "{{ ieducar__base_path }}/storage/logs"
+        entity: "{{ item.entity }}"
+        etype: "{{ item.etype }}"
+        permissions: rwx
+        state: present
+        recursive: true
+        default: true
+      loop:
+        - { entity: "{{ app__run_user }}", etype: user }
+        - { entity: "www-data", etype: group }
+      loop_control:
+        label: "{{ item.entity }}"

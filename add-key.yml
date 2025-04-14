@@ -1,13 +1,11 @@
 ---
-
 - name: "Playbook to Add Key to Instances"
-  hosts: appservers
+  hosts: ieducar
   vars:
     - status : "present"
     - key : "~/.ssh/id_rsa.pub"
 
   tasks:
-
   - name: "Copy the authorized key file from"
     ansible.posix.authorized_key:
       user: "{{ ansible_user }}"

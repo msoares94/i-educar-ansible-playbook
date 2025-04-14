@@ -1,5 +1,4 @@
 ---
-
 - name: Ensure users GRANT are present
   community.general.postgresql_user:
     name: "{{ item.name }}"
@@ -8,8 +7,6 @@
     role_attr_flags: "{{ item.role_attr_flags | default(omit) }}"
     db: "{{ item.db | default(omit) }}"
   with_items: "{{ postgresql__users }}"
-  become: true
   become_user: "{{ postgresql__user }}"
-  # See: https://github.com/ansible/ansible/issues/16048#issuecomment-229012509
   vars:
     ansible_ssh_pipelining: true

@@ -1,0 +1,6 @@
+; File managed by Ansible - do not edit manually
+; Custom PHP settings for FPM (conf.d/99-custom.ini)
+
+{% for item in php__config_fpm_php_ini %}
+{{ item.option }} = {{ item.value }}
+{% endfor %}

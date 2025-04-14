@@ -1,5 +1,4 @@
 ---
-
 - name: Configure ondrej/php apt repository
   apt_repository:
     repo: "{{ php__apt_repo }}"
@@ -10,7 +9,7 @@
   apt:
     name: "{{ item }}"
     state: present
-  with_items:
+  loop:
     - php{{ php__version }}
     - php{{ php__version }}-fpm
     - php{{ php__version }}-common
@@ -42,24 +41,22 @@
   register: php_setup
   notify: restart php-fpm
 
-- name: Configure global settings php-fpm in php.ini
-  lineinfile:
-    dest: "{{ php__config_path }}/php.ini"
-    backrefs: yes
-    regexp: "^;?{{ item.option }}.+$"
-    line: "{{ item.option }} = '{{ item.value }}'"
-    state: "{{ item.state | default('present') }}"
-    backup: yes
-  with_items: "{{ php__config_fpm_php_ini }}"
+- name: Create custom PHP settings in conf.d
+  template:
+    src: php-custom.ini.j2
+    dest: "/etc/php/{{ php__version }}/fpm/conf.d/99-custom.ini"
+    owner: root
+    group: root
+    mode: '0644'
+    validate: 'php -d display_errors=stderr -r "php_ini_loaded_file();" -c %s'
   notify: restart php-fpm
 
-- name: Configure global settings php-fpm in pool www.conf
-  lineinfile:
-    dest: "{{ php__config_path }}/pool.d/www.conf"
-    backrefs: yes
-    regexp: "^;?{{ item.option }}.+$"
-    line: "{{ item.option }} = '{{ item.value }}'"
-    state: "{{ item.state | default('present') }}"
-    backup: yes
-  with_items: "{{ php__config_fpm_pool_www_conf }}"
+- name: Create custom PHP-FPM pool settings
+  template:
+    src: php-fpm-pool-www.conf.j2
+    dest: "/etc/php/{{ php__version }}/fpm/pool.d/99-www-custom.conf"
+    owner: root
+    group: root
+    mode: '0644'
+    validate: '/usr/sbin/php-fpm{{ php__version }} -t -y %s'
   notify: restart php-fpm

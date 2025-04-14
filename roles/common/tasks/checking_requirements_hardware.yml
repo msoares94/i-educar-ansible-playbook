@@ -1,14 +1,23 @@
----
-
 - name: Checking total server memory
   vars:
     memory_min_required: "{{ system__memory_min_required | default('2') }}"
-    memory_current: "{{ (ansible_memtotal_mb/1000)|round|int }}"
+    memory_current: "{{ (ansible_memtotal_mb / 1000) | round | int }}"
   assert:
     that:
-      - "{{ memory_current }} >= {{ memory_min_required }}"
+      - memory_current >= memory_min_required
     success_msg: "Memory requirement accepted, current memory {{ memory_current }} GB"
     fail_msg: "Insufficient memory, required memory greater than or equal to {{ memory_min_required }}GB, current memory {{ memory_current }}GB"
   when:
-    - system__check_memory_min_required|bool == true
-#    - inventory_hostname in groups["dbservers"]
+    - system__check_memory_min_required | bool == true
+
+- name: Checking total server vCPUs
+  vars:
+    vcpu_min_required: "{{ system__vcpu_min_required | default('2') }}"
+    vcpu_current: "{{ ansible_processor_vcpus | default(ansible_processor_cores) | int }}"
+  assert:
+    that:
+      - vcpu_current >= vcpu_min_required
+    success_msg: "vCPU requirement accepted, current vCPU count is {{ vcpu_current }}"
+    fail_msg: "Insufficient vCPUs, required minimum is {{ vcpu_min_required }}, current is {{ vcpu_current }}"
+  when:
+    - system__check_vcpu_min_required | bool == true

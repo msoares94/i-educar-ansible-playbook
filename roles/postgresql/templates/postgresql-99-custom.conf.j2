@@ -1,0 +1,6 @@
+# File managed by Ansible - do not edit manually
+# Custom Postgres settings for postgresql.conf (conf.d/postgresql.conf)
+
+{% for item in postgresql__global_conf_selected %}
+{{ item.option }} = '{{ item.value }}'
+{% endfor %}

@@ -1,13 +1,12 @@
 ---
-
 - name: System information
   debug:
     msg: "{{ item }}"
-  with_items:
+  loop:
     - "{{ ansible_distribution }} {{ ansible_distribution_version }}"
 
-- include_tasks: checking_requirements_software.yml
 - include_tasks: checking_requirements_hardware.yml
+- include_tasks: checking_requirements_software.yml
 - include_tasks: install.yml
 - include_tasks: locale.yml
 

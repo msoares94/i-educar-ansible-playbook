@@ -1,5 +1,4 @@
 ---
-
 - name: Ensure databases are present
   community.general.postgresql_db:
     name: "{{ item.name }}"
@@ -10,9 +9,7 @@
     owner: "{{ item.owner | default(postgresql__user) }}"
     state: "{{ item.state | default('present') }}"
   with_items: "{{ postgresql__databases }}"
-  become: true
   become_user: "{{ postgresql__user }}"
-  # See: https://github.com/ansible/ansible/issues/16048#issuecomment-229012509
   vars:
     ansible_ssh_pipelining: true
 
@@ -24,8 +21,6 @@
     - "{{ postgresql__databases }}"
     - extension
     - skip_missing: true
-  become: true
   become_user: "{{ postgresql__user }}"
-  # See: https://github.com/ansible/ansible/issues/16048#issuecomment-229012509
   vars:
     ansible_ssh_pipelining: true

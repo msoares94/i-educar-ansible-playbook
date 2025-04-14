@@ -1,0 +1,23 @@
+# Variables specific to the development environment
+
+# Access by IP only (no domain, no SSL)
+ieducar__with_domain: false                  # Access via IP (no domain)
+ieducar__name_domain: "_"                    # Placeholder, required by NGINX but unused in IP-only mode
+
+ieducar__use_ssl: false                      # No SSL
+ieducar__use_letsencrypt: false              # No Let's Encrypt
+
+# Database settings for IM environment
+ieducar_db_host: 127.0.0.1
+ieducar_db_port: 5432
+ieducar_db_username: ieducar
+ieducar_db_password: ieducar
+ieducar_db_database: ieducar_development
+
+# App env for internal usage
+ieducar_app_env: local
+ieducar_app_debug: true
+
+# Optional override (in case of local forks)
+#ieducar_url_repository: https://github.com/portabilis/i-educar.git
+#ieducar_version: 2.9

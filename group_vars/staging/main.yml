@@ -1,0 +1,23 @@
+# Variables specific to the staging environment
+
+# i-Educar basic configuration
+ieducar__with_domain: false                       # No domain will be used, accessed via IP
+ieducar__name_domain: "_"                         # Placeholder value when no domain is used
+
+ieducar__use_ssl: false                           # No SSL for staging
+ieducar__use_letsencrypt: false                   # Let's Encrypt not used
+
+# Database configuration for staging
+ieducar_db_host: 127.0.0.1
+ieducar_db_port: 5432
+ieducar_db_username: ieducar
+ieducar_db_password: ieducar
+ieducar_db_database: ieducar_staging
+
+# Application environment for staging
+ieducar_app_env: staging
+ieducar_app_debug: true
+
+# Optional: custom source and version for i-Educar
+#ieducar_url_repository: https://github.com/portabilis/i-educar.git
+#ieducar_version: 2.9

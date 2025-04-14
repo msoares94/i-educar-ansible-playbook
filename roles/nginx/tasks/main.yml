@@ -1,12 +1,11 @@
 ---
-
 - name: Uninstall Apache
   apt:
     name: "{{ item }}"
     autoremove: yes
     state: absent
     force: true
-  with_items:
+  loop:
     - apache2
   notify: stop apache
 
@@ -16,23 +15,33 @@
     state: present
   notify: restart nginx
 
-- name: Configure global settings Nginx
+- name: "Ensure {{ nginx__deploy_path }}/conf.d directory exists"
+  file:
+    path: "{{ nginx__deploy_path }}/conf.d"
+    state: directory
+    mode: '0755'
+
+- name: "Ensure {{ nginx__deploy_path }}/sites-available directory exists"
+  file:
+    path: "{{ nginx__deploy_path }}/sites-available"
+    state: directory
+    mode: '0755'
+
+- name: "Ensure {{ nginx__deploy_path }}/sites-enabled directory exists"
+  file:
+    path: "{{ nginx__deploy_path }}/sites-enabled"
+    state: directory
+    mode: '0755'
+
+- name: Deploy main NGINX configuration file
   template:
     src: nginx.conf.j2
     dest: "{{ nginx__config_path }}/nginx.conf"
+    owner: root
+    group: root
+    mode: '0644'
     backup: yes
   notify: restart nginx
-
-# - name: Configure global settings Nginx
-#   blockinfile:
-#     path: "{{ nginx__config_path }}/nginx.conf"
-#     insertbefore: "^(.*)include /etc/nginx/mime.types;(.*)$"
-#     block: |
-#                 client_body_buffer_size 64k;
-#                 client_max_body_size 100m;
-#                 client_body_in_single_buffer on;
-#                 client_header_buffer_size  1m;
-#                 large_client_header_buffers 4 8k;
 
 - name: Copy page default nginx 
   template:
@@ -40,10 +49,12 @@
     dest: "{{ nginx__deploy_path }}/index.html"
   notify: restart nginx
 
-- name: Add group to user {{ ieducar__run_user }}
-  user:
-    name: "{{ ieducar__run_user }}"
-    groups: "{{ item }}"
-    append: yes
-  with_items:
-    - www-data
+- name: Deploy NGINX custom global configuration snippet
+  template:
+    src: 99-global-custom.conf.j2
+    dest: "{{ nginx__deploy_path }}/conf.d/99-global-custom.conf"
+    owner: root
+    group: root
+    mode: '0644'
+  when: nginx__global_settings is defined and nginx__global_settings | length > 0
+  notify: restart nginx

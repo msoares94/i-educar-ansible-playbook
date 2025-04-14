@@ -1,8 +1,8 @@
 ---
-
 - name: Add postgresql.org repository GPG key
   apt_key:
     url: "{{ postgresql__gpg_url }}"
+    state: present
 
 - name: Configure postgresql.org apt repository
   apt_repository:
@@ -14,7 +14,7 @@
   apt:
     name: "{{ item }}"
     state: present
-  with_items:
+  loop:
     - "postgresql-{{ postgresql__version }}"
     - "postgresql-client-{{ postgresql__version }}"
   register: postgresql__setup
@@ -30,5 +30,5 @@
     name: "postgresql-{{ postgresql__version }}-{{ item }}"
     state: present
   notify: restart postgresql
-  with_items:
-    - "{{ postgresql__extensions }}"
+  loop: "{{ postgresql__extensions | default([]) | flatten }}"
+  when: (postgresql__extensions | default([])) | length > 0

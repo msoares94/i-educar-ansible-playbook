@@ -1,0 +1,70 @@
+---
+ieducar__env_vars:
+  - option: 'APP_ENV'
+    value: "{{ ieducar_app_env | default('production') }}"
+  - option: 'APP_DEBUG'
+    value: "{{ ieducar_app_debug | default('false') }}"
+  - option: 'DB_HOST'
+    value: "{{ ieducar_db_host | default('127.0.0.1') }}"
+  - option: 'DB_PORT'
+    value: "{{ ieducar_db_port | default('5432') }}"
+  - option: 'DB_DATABASE'
+    value: "{{ ieducar_db_database | default('ieducar') }}"
+  - option: 'DB_USERNAME'
+    value: "{{ ieducar_db_username | default('ieducar') }}"
+  - option: 'DB_PASSWORD'
+    value: "{{ ieducar_db_password | default('ieducar') }}"
+
+ieducar__base_path: "{{ ieducar_base_path | default('/var/www/ieducar') }}"
+ieducar__version: "{{ ieducar_version | default('2.9') }}"
+ieducar__url_repository: "{{ ieducar_url_repository | default('https://github.com/portabilis/i-educar.git') }}"
+ieducar__deployment_type: "{{ ieducar_deployment_type | default('ieducar-ce') }}"
+
+ieducar__install_reports_package_community_edition: "{{ ieducar_install_reports_package_community_edition | default('true') }}"
+ieducar__version_reports_package_community_edition: "{{ ieducar_version_reports_package_community_edition | default('2.9') }}"
+ieducar__url_repository_reports_package_community_edition: "{{ ieducar_url_repository_reports_package_community_edition | default('https://github.com/portabilis/i-educar-reports-package.git') }}"
+
+ieducar__install_educacenso_package_community_edition: "{{ ieducar_install_educacenso_package_community_edition | default('true') }}"
+ieducar__version_educacenso_package_community_edition: "{{ ieducar_version_educacenso_package_community_edition | default('2.9') }}"
+ieducar__url_repository_educacenso_package_community_edition: "{{ ieducar_url_repository_educacenso_package_community_edition | default('https://github.com/portabilis/i-educar-educacenso-package.git') }}"
+
+ieducar__postgresql_users:
+  - {
+      name: "{{ ieducar_db_username | default('ieducar') }}",
+      password: "{{ ieducar_db_password | default('ieducar') }}",
+      encrypted: yes,
+      expires: 'infinity',
+      state: 'present',
+      role_attr_flags: Superuser,
+      db: "{{ ieducar_db_database | default('ieducar') }}"
+    }
+
+ieducar__postgresql_databases:
+  - {
+      name: "{{ ieducar_db_database | default('ieducar') }}",
+      lc_collate: 'pt_BR.UTF-8',
+      lc_ctype: 'pt_BR.UTF-8',
+      encoding: 'UTF-8',
+      template: 'template0',
+      owner: "{{ ieducar_db_username | default('ieducar') }}",
+      extension: [],
+      state: 'present'
+    }
+
+ieducar__with_domain: "{{ ieducar_with_domain | default(false) }}"
+ieducar__name_domain: "{{ ieducar_name_domain | default('_') }}"
+
+ieducar__use_ssl: "{{ ieducar_use_ssl | default(false) }}"
+ieducar__use_letsencrypt: "{{ ieducar_use_letsencrypt | default(false) }}"
+
+ieducar__ssl_certificate_path: "{{ ieducar_ssl_certificate_path | default('/etc/ssl/certs/fullchain.pem') }}"
+ieducar__ssl_certificate_key_path: "{{ ieducar_ssl_certificate_key_path | default('/etc/ssl/private/privkey.pem') }}"
+
+ieducar__nginx_template_mode: >-
+  {{
+    'with-domain-and-ssl'
+      if ieducar__with_domain and ieducar__use_ssl else
+    'with-domain-without-ssl'
+      if ieducar__with_domain and not ieducar__use_ssl else
+    'without-domain-and-without-ssl'
+  }}

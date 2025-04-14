@@ -1,0 +1,30 @@
+---
+php__apt_repo: ppa:ondrej/php
+php__version: "{{ php_version | default('8.3') }}"
+php__config_path: "/etc/php/{{ php__version }}/fpm"
+
+php__config_fpm_php_ini:
+  - option: memory_limit
+    value: '2048M'
+  - option: upload_max_filesize
+    value: '2048M'
+  - option: post_max_size
+    value: '2048M'
+  - option: max_execution_time
+    value: '300'
+
+php__config_fpm_pool_www_conf:
+  - option: request_terminate_timeout
+    value: '300'
+  - option: pm
+    value: dynamic
+  - option: pm.max_children
+    value: 10
+  - option: pm.start_servers
+    value: 4
+  - option: pm.min_spare_servers
+    value: 2
+  - option: pm.max_spare_servers
+    value: 6
+  - option: pm.max_requests
+    value: 500

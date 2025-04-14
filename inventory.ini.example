@@ -1,0 +1,73 @@
+# Server i-Educar
+[ieducar]
+# ansible_user -> SSH user (must allow passwordless login via SSH key)
+# ansible_become -> Required if ansible_user is not root
+
+#127.0.0.1 ansible_user=root
+#127.0.0.1 ansible_user=ubuntu ansible_become=true ansible_become_method=sudo
+
+# Common SSH configuration
+[all:vars]
+ansible_ssh_common_args="-o StrictHostKeyChecking=no"
+
+# --- PostgreSQL Settings ---
+#postgresql_version=15
+
+# --- PHP Settings ---
+#php_version=8.3
+
+# --- Composer Settings ---
+#composer_version=2.7.7
+
+# --- i-Educar Settings ---
+# Git repository and version
+#ieducar_url_repository=https://github.com/seu-fork/i-educar.git
+#ieducar_version=2.9
+
+# Base installation path
+#ieducar_base_path=/var/www/ieducar
+
+# Environment variables
+#ieducar_app_env=production
+#ieducar_app_debug=false
+
+# Database connection
+#ieducar_db_host=127.0.0.1
+#ieducar_db_port=5432
+#ieducar_db_database=ieducar
+#ieducar_db_username=ieducar
+#ieducar_db_password=ieducar
+
+# Deployment type
+#ieducar_deployment_type=ieducar-ce
+
+# Reports package
+#ieducar_install_reports_package_community_edition=true
+#ieducar_version_reports_package_community_edition=2.9
+#ieducar_url_repository_reports_package_community_edition=https://github.com/seu-fork/i-educar-reports-package.git
+
+# Educacenso package
+#ieducar_install_educacenso_package_community_edition=true
+#ieducar_version_educacenso_package_community_edition=2.9
+#ieducar_url_repository_educacenso_package_community_edition=https://github.com/seu-fork/i-educar-educacenso-package.git
+
+# --- Domain and SSL ---
+# Enable domain-based access (true or false)
+#ieducar_with_domain=false
+
+# Required when ieducar_with_domain=true
+#ieducar_name_domain=ieducar.example.com.br
+
+# Enable SSL support (true or false) - requires ieducar_with_domain=true
+#ieducar_use_ssl=false
+
+# Use Let's Encrypt for SSL (true or false) - requires ieducar_use_ssl=true
+#ieducar_use_letsencrypt=false
+
+# Required when ieducar_use_letsencrypt=true
+#letsencrypt_email=ieducar@ieducar.example.com
+#letsencrypt_cert_name=ieducar.example.com.br
+
+# Optional: certificate paths (only used when ieducar_use_letsencrypt=false)
+#ieducar_ssl_certificate_path=/etc/ssl/certs/fullchain.pem
+#ieducar_ssl_certificate_key_path=/etc/ssl/private/privkey.pem
