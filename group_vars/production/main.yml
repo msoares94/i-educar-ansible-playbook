@@ -1,12 +1,12 @@
-# Variables specific to the development environment
+# Variables specific to the production environment
 
 # App env for internal usage
-ieducar_app_env: local
-ieducar_app_debug: true
+ieducar_app_env: production
+ieducar_app_debug: false
 
 # Database settings for IM environment
 ieducar_db_host: 127.0.0.1
 ieducar_db_port: 5432
 ieducar_db_username: ieducar
 ieducar_db_password: ieducar
-ieducar_db_database: ieducar_development
+ieducar_db_database: ieducar_production

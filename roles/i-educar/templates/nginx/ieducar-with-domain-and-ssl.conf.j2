@@ -17,11 +17,15 @@ server {
     index index.php index.html;
 
     {% if ieducar__use_letsencrypt | bool %}
-    ssl_certificate /etc/letsencrypt/live/{{ letsencrypt__cert_name }}/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/{{ letsencrypt__cert_name }}/privkey.pem;
+
+    ssl_certificate /etc/letsencrypt/live/{{ ieducar__name_domain }}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/{{ ieducar__name_domain }}/privkey.pem;
+
     {% else %}
+
     ssl_certificate {{ ieducar__ssl_certificate_path }};
     ssl_certificate_key {{ ieducar__ssl_certificate_key_path }};
+    
     {% endif %}
 
     include snippets/ieducar-location-snippets.conf;

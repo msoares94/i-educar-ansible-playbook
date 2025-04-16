@@ -1,33 +1,39 @@
-# Server i-Educar
+# ───────────────────────────────────────────────────────
+# Inventory Example for i-Educar Ansible Installation
+# Rename this file to "inventory.ini" before running playbook
+# ───────────────────────────────────────────────────────
+
+# Group of i-Educar target servers
 [ieducar]
-# ansible_user -> SSH user (must allow passwordless login via SSH key)
-# ansible_become -> Required if ansible_user is not root
+# Use the IP or hostname of your target server
+# Example with root SSH access
+# 192.168.1.100 ansible_user=root
 
-#127.0.0.1 ansible_user=root
-#127.0.0.1 ansible_user=ubuntu ansible_become=true ansible_become_method=sudo
+# Example using a non-root user with sudo
+# 192.168.1.100 ansible_user=ubuntu ansible_become=true ansible_become_method=sudo
 
-# Common SSH configuration
+# Optional: Skip SSH host key checking
 [all:vars]
 ansible_ssh_common_args="-o StrictHostKeyChecking=no"
 
-# --- PostgreSQL Settings ---
+# ──────────────── PostgreSQL Settings ────────────────
 #postgresql_version=15
 
-# --- PHP Settings ---
+# ────────────────── PHP Settings ─────────────────────
 #php_version=8.3
 
-# --- Composer Settings ---
+# ──────────────── Composer Settings ──────────────────
 #composer_version=2.7.7
 
-# --- i-Educar Settings ---
-# Git repository and version
-#ieducar_url_repository=https://github.com/seu-fork/i-educar.git
+# ────────────── i-Educar Core Settings ───────────────
+# Repository and version
+#ieducar_url_repository=https://github.com/portabilis/i-educar.git
 #ieducar_version=2.9
 
-# Base installation path
+# Installation path
 #ieducar_base_path=/var/www/ieducar
 
-# Environment variables
+# Laravel Environment
 #ieducar_app_env=production
 #ieducar_app_debug=false
 
@@ -38,36 +44,41 @@ ansible_ssh_common_args="-o StrictHostKeyChecking=no"
 #ieducar_db_username=ieducar
 #ieducar_db_password=ieducar
 
-# Deployment type
+# Deployment type (e.g. ieducar-ce or customized fork)
 #ieducar_deployment_type=ieducar-ce
 
-# Reports package
+# ─────── i-Educar Reports Package (Community) ───────
 #ieducar_install_reports_package_community_edition=true
 #ieducar_version_reports_package_community_edition=2.9
-#ieducar_url_repository_reports_package_community_edition=https://github.com/seu-fork/i-educar-reports-package.git
+#ieducar_url_repository_reports_package_community_edition=https://github.com/portabilis/i-educar-reports-package.git
 
-# Educacenso package
+# ─────── i-Educar Educacenso Package (Community) ───────
 #ieducar_install_educacenso_package_community_edition=true
 #ieducar_version_educacenso_package_community_edition=2.9
-#ieducar_url_repository_educacenso_package_community_edition=https://github.com/seu-fork/i-educar-educacenso-package.git
+#ieducar_url_repository_educacenso_package_community_edition=https://github.com/portabilis/i-educar-educacenso-package.git
 
-# --- Domain and SSL ---
-# Enable domain-based access (true or false)
+# ──────────────── Domain and SSL Settings ────────────────
+
+# Access type: false = IP only (no domain), true = use domain
 #ieducar_with_domain=false
 
-# Required when ieducar_with_domain=true
+# Required if ieducar_with_domain=true
 #ieducar_name_domain=ieducar.example.com.br
 
-# Enable SSL support (true or false) - requires ieducar_with_domain=true
-#ieducar_use_ssl=false
+# Enable SSL: true or false (requires ieducar_with_domain=true)
+#ieducar_use_ssl=true
 
-# Use Let's Encrypt for SSL (true or false) - requires ieducar_use_ssl=true
-#ieducar_use_letsencrypt=false
+# Use Let's Encrypt for SSL (requires ieducar_use_ssl=true)
+#ieducar_use_letsencrypt=true
 
-# Required when ieducar_use_letsencrypt=true
-#letsencrypt_email=ieducar@ieducar.example.com
-#letsencrypt_cert_name=ieducar.example.com.br
+# Required when using Let's Encrypt
+#ieducar_letsencrypt_email=admin@example.com
 
-# Optional: certificate paths (only used when ieducar_use_letsencrypt=false)
-#ieducar_ssl_certificate_path=/etc/ssl/certs/fullchain.pem
-#ieducar_ssl_certificate_key_path=/etc/ssl/private/privkey.pem
+# ───── Optional: Use your own SSL certificate ─────
+# Only used when ieducar_use_ssl=true and ieducar_use_letsencrypt=false
+#ieducar_ssl_certificate_path=/etc/ssl/certs/ieducar/fullchain.pem
+#ieducar_ssl_certificate_key_path=/etc/ssl/private/ieducar/privkey.pem
+
+# Local source files to upload (manual SSL only)
+#ieducar_ssl_certificate_src=/path/to/fullchain.pem
+#ieducar_ssl_certificate_key_src=/path/to/privkey.pem

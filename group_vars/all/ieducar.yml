@@ -14,6 +14,16 @@ ieducar__env_vars:
     value: "{{ ieducar_db_username | default('ieducar') }}"
   - option: 'DB_PASSWORD'
     value: "{{ ieducar_db_password | default('ieducar') }}"
+  # Extras when domain + SSL is enabled
+  - option: 'APP_URL'
+    value: >-
+      {{ 'https://' ~ ieducar__name_domain if (ieducar__with_domain and ieducar__use_ssl) else 'http://localhost' }}
+  - option: 'APP_DEFAULT_HOST'
+    value: >-
+      {{ ieducar__name_domain if ieducar__with_domain else 'localhost' }}
+  - option: 'ASSETS_SECURE'
+    value: >-
+      {{ 'true' if (ieducar__with_domain and ieducar__use_ssl) else 'false' }}
 
 ieducar__base_path: "{{ ieducar_base_path | default('/var/www/ieducar') }}"
 ieducar__version: "{{ ieducar_version | default('2.9') }}"
@@ -53,12 +63,11 @@ ieducar__postgresql_databases:
 
 ieducar__with_domain: "{{ ieducar_with_domain | default(false) }}"
 ieducar__name_domain: "{{ ieducar_name_domain | default('_') }}"
+ieducar__cert_name: "{{ ieducar_cert_name | default('_') }}"
 
 ieducar__use_ssl: "{{ ieducar_use_ssl | default(false) }}"
 ieducar__use_letsencrypt: "{{ ieducar_use_letsencrypt | default(false) }}"
-
-ieducar__ssl_certificate_path: "{{ ieducar_ssl_certificate_path | default('/etc/ssl/certs/fullchain.pem') }}"
-ieducar__ssl_certificate_key_path: "{{ ieducar_ssl_certificate_key_path | default('/etc/ssl/private/privkey.pem') }}"
+ieducar__letsencrypt_email: "{{ ieducar_letsencrypt_email | default('email@domain.com') }}"
 
 ieducar__nginx_template_mode: >-
   {{
@@ -68,3 +77,9 @@ ieducar__nginx_template_mode: >-
       if ieducar__with_domain and not ieducar__use_ssl else
     'without-domain-and-without-ssl'
   }}
+
+ieducar__ssl_certificate_src: "{{ ieducar_ssl_certificate_src }}"
+ieducar__ssl_certificate_key_src: "{{ ieducar_ssl_certificate_key_src }}"
+
+ieducar__ssl_certificate_path: "{{ ieducar_ssl_certificate_path | default('/etc/ssl/certs/ieducar/fullchain.pem') }}"
+ieducar__ssl_certificate_key_path: "{{ ieducar_ssl_certificate_key_path | default('/etc/ssl/private/ieducar/privkey.pem') }}"

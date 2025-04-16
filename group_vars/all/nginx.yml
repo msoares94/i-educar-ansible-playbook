@@ -23,12 +23,12 @@ nginx__gzip_types:
 
 nginx__global_settings:
   - option: client_body_buffer_size
-    value: 64k
+    value: '64k'
   - option: client_max_body_size
-    value: 100m
+    value: '100m'
   - option: client_body_in_single_buffer
-    value: on
+    value: 'on'
   - option: client_header_buffer_size
-    value: 1m
+    value: '1m'
   - option: large_client_header_buffers
-    value: "4 8k"
+    value: '4 8k'

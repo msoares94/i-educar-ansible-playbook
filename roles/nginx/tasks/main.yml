@@ -9,27 +9,27 @@
     - apache2
   notify: stop apache
 
-- name: Install Nginx
+- name: Install NGINX
   apt:
     name: nginx
     state: present
   notify: restart nginx
 
-- name: "Ensure {{ nginx__deploy_path }}/conf.d directory exists"
+- name: "Ensure {{ nginx__config_path }}/conf.d directory exists"
   file:
-    path: "{{ nginx__deploy_path }}/conf.d"
+    path: "{{ nginx__config_path }}/conf.d"
     state: directory
     mode: '0755'
 
-- name: "Ensure {{ nginx__deploy_path }}/sites-available directory exists"
+- name: "Ensure {{ nginx__config_path }}/sites-available directory exists"
   file:
-    path: "{{ nginx__deploy_path }}/sites-available"
+    path: "{{ nginx__config_path }}/sites-available"
     state: directory
     mode: '0755'
 
-- name: "Ensure {{ nginx__deploy_path }}/sites-enabled directory exists"
+- name: "Ensure {{ nginx__config_path }}/sites-enabled directory exists"
   file:
-    path: "{{ nginx__deploy_path }}/sites-enabled"
+    path: "{{ nginx__config_path }}/sites-enabled"
     state: directory
     mode: '0755'
 
@@ -43,7 +43,7 @@
     backup: yes
   notify: restart nginx
 
-- name: Copy page default nginx 
+- name: Copy page default NGINX 
   template:
     src: index.html
     dest: "{{ nginx__deploy_path }}/index.html"
@@ -52,7 +52,7 @@
 - name: Deploy NGINX custom global configuration snippet
   template:
     src: 99-global-custom.conf.j2
-    dest: "{{ nginx__deploy_path }}/conf.d/99-global-custom.conf"
+    dest: "{{ nginx__config_path }}/conf.d/99-global-custom.conf"
     owner: root
     group: root
     mode: '0644'

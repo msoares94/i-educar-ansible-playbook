@@ -4,13 +4,22 @@
     ieducar__nginx_template: >-
       nginx/ieducar-{{ ieducar__nginx_template_mode }}.conf.j2
 
-- name: Ensure required vars are defined when using domain and SSL
+- name: Ensure domain is defined when using SSL
   assert:
     that:
       - ieducar__name_domain is defined and ieducar__name_domain != ''
-      - letsencrypt__cert_name is defined and letsencrypt__cert_name != ''
-    fail_msg: "To use domain + SSL you must define ieducar__name_domain and letsencrypt__cert_name."
-  when: ieducar__with_domain | bool and letsencrypt__ssl | bool
+    fail_msg: "To use domain and SSL, you must define ieducar__name_domain."
+  when: ieducar__with_domain | bool and ieducar__use_ssl | bool
+
+- name: Ensure manual SSL cert paths are provided if Let's Encrypt is not used
+  assert:
+    that:
+      - ieducar__ssl_certificate_src is defined
+      - ieducar__ssl_certificate_key_src is defined
+    fail_msg: "You must define certificate and key source files when using manual SSL."
+  when:
+    - ieducar__use_ssl | bool
+    - not ieducar__use_letsencrypt | bool
 
 - name: Validate domain format
   assert:
@@ -26,6 +35,71 @@
       - ieducar__ssl_certificate_key_path is defined
     fail_msg: "Manual SSL selected but certificate paths not defined."
   when: ieducar__with_domain | bool and ieducar__use_ssl | bool and not ieducar__use_letsencrypt | bool
+
+- name: Ensure Let's Encrypt email is defined
+  assert:
+    that:
+      - ieducar_letsencrypt_email is defined
+    fail_msg: "You must define ieducar_letsencrypt_email to use Let's Encrypt."
+  when:
+    - ieducar__use_ssl | bool
+    - ieducar__use_letsencrypt | bool
+
+- name: Assert email is not placeholder
+  assert:
+    that:
+      - ieducar__letsencrypt_email is match("^[^@]+@[^@]+\.[^@]+$")
+      - "'example.com' not in ieducar__letsencrypt_email"
+    fail_msg: "Please provide a real email in 'ieducar_letsencrypt_email'. 'example.com' is not allowed."
+  when:
+    - ieducar__use_letsencrypt | bool
+
+- name: Install Certbot
+  become: true
+  become_user: root
+  apt:
+    name: certbot
+    state: present
+  when:
+    - ieducar__use_ssl | bool
+    - ieducar__use_letsencrypt | bool
+
+- name: Generate SSL certificate with Certbot
+  become: true
+  become_user: root
+  command: certbot certonly --webroot -w {{ nginx__deploy_path }} -d {{ ieducar__name_domain }} --non-interactive --agree-tos -m {{ ieducar__letsencrypt_email }}
+  when:
+    - ieducar__use_ssl | bool
+    - ieducar__use_letsencrypt | bool
+
+- name: Ensure SSL certificate directories exist
+  become: true
+  become_user: root
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+  loop:
+    - "{{ ieducar__ssl_certificate_path | dirname }}"
+    - "{{ ieducar__ssl_certificate_key_path | dirname }}"
+
+- name: Upload manual SSL certificate and key
+  become: true
+  become_user: root
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: root
+    group: root
+    mode: '0600'
+  with_items:
+    - { src: "{{ ieducar__ssl_certificate_src }}", dest: "{{ ieducar__ssl_certificate_path }}" }
+    - { src: "{{ ieducar__ssl_certificate_key_src }}", dest: "{{ ieducar__ssl_certificate_key_path }}" }
+  when:
+    - ieducar__use_ssl | bool
+    - not ieducar__use_letsencrypt | bool
 
 - include_tasks: create_users.yml
 - include_tasks: databases.yml
@@ -48,7 +122,7 @@
     group: www-data
     mode: '0755'
 
-- name: Git Checkout i-Educar {{ ieducar__version }}
+- name: Git checkout i-Educar {{ ieducar__version }}
   git:
     repo: "{{ ieducar__url_repository }}"
     version: "{{ ieducar__version }}"
@@ -80,14 +154,6 @@
   args:
     chdir: "{{ ieducar__base_path }}"
     creates: "{{ ieducar__base_path }}/.env"
-
-# - name: "Fix permission i-Educar"
-#   become: true
-#   shell: |
-#     chown -R {{ app__run_user }}:www-data {{ ieducar__base_path }}
-#     chmod g+s {{ ieducar__base_path }}
-#     setfacl -R -m g::rwx {{ ieducar__base_path }}
-#     setfacl -d -m o::rx {{ ieducar__base_path }}
 
 - name: Set i-Educar permissions
   become_user: root
@@ -198,7 +264,7 @@
     state: link
   notify: restart nginx
 
-- name: Run Laravel install command (composer)
+- name: Run Laravel install command (Composer)
   environment:
     COMPOSER_ALLOW_SUPERUSER: "1"
     COMPOSER_PROCESS_TIMEOUT: "900"

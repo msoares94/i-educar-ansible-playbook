@@ -3,14 +3,6 @@
 # If true, automatically confirm composer install prompts
 ieducar__composer_allow_prompt: false
 
-# Default NGINX domain and SSL behavior
-ieducar__with_domain: "{{ ieducar_with_domain | default(false) }}"
-ieducar__name_domain: "{{ ieducar_name_domain | default('') }}"
-
-# SSL settings - use Let's Encrypt or custom certificates
-letsencrypt__ssl: "{{ letsencrypt_ssl | default(false) }}"
-letsencrypt__cert_name: "{{ letsencrypt_cert_name | default('') }}"
-
 # Path to the .env file for i-Educar
 env_path: "{{ ieducar__base_path }}/.env"
 

@@ -1,11 +1,11 @@
 ---
-- name: Remove existing educacenso package (if present)
+- name: Remove existing Educacenso Package of i-Educar (if present)
   file:
     path: "{{ ieducar__base_path }}/packages/portabilis/i-educar-educacenso-package"
     state: absent
   when: ieducar__install_educacenso_package_community_edition | bool
 
-- name: Git Checkout the Educacenso Package of i-Educar {{ ieducar__version }}
+- name: Git checkout the Educacenso Package of i-Educar {{ ieducar__version }}
   git:
     repo: "{{ ieducar__url_repository_educacenso_package_community_edition }}"
     version: "{{ ieducar__version_educacenso_package_community_edition }}"
@@ -15,7 +15,7 @@
     clone: yes
   when: ieducar__install_educacenso_package_community_edition | bool
 
-- name: Install the Educacenso Package dependencies
+- name: Install the Educacenso Package of i-Educar dependencies
   environment:
     COMPOSER_ALLOW_SUPERUSER: "1"
     COMPOSER_PROCESS_TIMEOUT: "900"
@@ -24,7 +24,7 @@
   command: composer update-install
   when: ieducar__install_educacenso_package_community_edition | bool
 
-- name: Clear Cache of Educacenso Package
+- name: Clear cache Educacenso Package of i-Educar
   args:
     chdir: "{{ ieducar__base_path }}"
   command: php artisan cache:clear
