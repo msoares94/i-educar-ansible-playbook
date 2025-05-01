@@ -13,4 +13,4 @@ system__locales:
 
 system__locale: "{{ system_locale | default('pt_BR.UTF-8') }}"
 system__language: "{{ system_language | default('pt_BR.UTF-8') }}"
-system__time_zone: "{{ system_time_zone | default('America/Sao_Paulo') }}"
+system__timezone: "{{ system_timezone | default('America/Sao_Paulo') }}"

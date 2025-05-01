@@ -10,6 +10,6 @@
 - include_tasks: install.yml
 - include_tasks: locale.yml
 
-- name: Ensure configured time zone is present
+- name: Ensure configured timezone is present
   community.general.timezone:
-    name: "{{ system__time_zone }}"
+    name: "{{ system__timezone }}"

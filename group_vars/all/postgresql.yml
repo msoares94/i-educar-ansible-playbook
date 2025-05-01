@@ -15,6 +15,8 @@ postgresql__user: "postgres"
 postgresql__group: "postgres"
 
 postgresql__tuning_default:
+  - option: listen_addresses
+    value: localhost
   - option: shared_buffers
     value: 128MB
   - option: effective_cache_size
@@ -33,6 +35,8 @@ postgresql__tuning_default:
     value: 4.0
 
 postgresql__tuning_2gb:
+  - option: listen_addresses
+    value: localhost
   - option: shared_buffers
     value: 512MB
   - option: effective_cache_size
@@ -51,6 +55,8 @@ postgresql__tuning_2gb:
     value: 1.1
 
 postgresql__tuning_4gb:
+  - option: listen_addresses
+    value: localhost
   - option: shared_buffers
     value: 1GB
   - option: effective_cache_size
@@ -69,6 +75,8 @@ postgresql__tuning_4gb:
     value: 1.1
 
 postgresql__tuning_8gb:
+  - option: listen_addresses
+    value: localhost
   - option: shared_buffers
     value: 2GB
   - option: effective_cache_size
@@ -87,6 +95,8 @@ postgresql__tuning_8gb:
     value: 1.1
 
 postgresql__tuning_12gb:
+  - option: listen_addresses
+    value: localhost
   - option: shared_buffers
     value: 3GB
   - option: effective_cache_size
@@ -124,26 +134,8 @@ postgresql__users:
     role_attr_flags: Superuser, Create role, Create DB, Replication, Bypass RLS,
     db: postgres
   }
-  - {
-    name: "test",
-    password: "supersecure",
-    encrypted: yes,
-    expires: 'infinity',
-    state: 'present',
-    db: test
-  }
 
-postgresql__databases:
-  - {
-    name: test,
-    lc_collate: 'pt_BR.UTF-8',
-    lc_ctype: 'pt_BR.UTF-8',
-    encoding: 'UTF-8',
-    template: 'template0',
-    owner: test,
-    extension: [],
-    state: 'present'
-   }
+postgresql__databases: {}
 
 postgresql__bin_path: "/usr/lib/postgresql/{{ postgresql__version }}/bin"
 postgresql__data_work_dir: "/var/lib/postgresql/{{ postgresql__version }}/main"
